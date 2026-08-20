@@ -1,618 +1,1038 @@
-// ==========================================
-// TWIN SWAP — WEB3 WALLET VERSION
-// ==========================================
+// ========================================
+// TWINSWAP
+// LIVE SOLANA JUPITER QUOTE SYSTEM
+// ========================================
 
 
-// ================================
-// ELEMENTS
-// ================================
+// ----------------------------------------
+// TOKEN DATA
+// ----------------------------------------
 
-const payAmount = document.getElementById("payAmount");
-const receiveAmount = document.getElementById("receiveAmount");
+const TOKENS = {
 
-const payTokenButton = document.getElementById("payTokenButton");
-const receiveTokenButton = document.getElementById("receiveTokenButton");
+  SOL: {
+    symbol: "SOL",
+    icon: "◎",
+    mint: "So11111111111111111111111111111111111111112",
+    decimals: 9
+  },
 
-const payTokenMenu = document.getElementById("payTokenMenu");
-const receiveTokenMenu = document.getElementById("receiveTokenMenu");
+  USDC: {
+    symbol: "USDC",
+    icon: "💵",
+    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    decimals: 6
+  },
 
-const payTokenName = document.getElementById("payTokenName");
-const receiveTokenName = document.getElementById("receiveTokenName");
+  USDT: {
+    symbol: "USDT",
+    icon: "💵",
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    decimals: 6
+  },
 
-const payTokenIcon = document.getElementById("payTokenIcon");
-const receiveTokenIcon = document.getElementById("receiveTokenIcon");
+  JUP: {
+    symbol: "JUP",
+    icon: "🪐",
+    mint: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    decimals: 6
+  },
 
-const switchTokens = document.getElementById("switchTokens");
+  BONK: {
+    symbol: "BONK",
+    icon: "🐕",
+    mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    decimals: 5
+  }
 
-const swapButton = document.getElementById("swapButton");
-
-const exchangeRate = document.getElementById("exchangeRate");
-const marketStatus = document.getElementById("marketStatus");
-
-const connectWallet = document.getElementById("connectWallet");
-const walletStatus = document.getElementById("walletStatus");
-
-const balanceElement = document.getElementById("balance");
+};
 
 
-// ================================
-// TOKEN STATE
-// ================================
+// ----------------------------------------
+// JUPITER QUOTE API
+// ----------------------------------------
+
+const JUPITER_QUOTE_URL =
+  "https://lite-api.jup.ag/swap/v1/quote";
+
+
+// ----------------------------------------
+// STATE
+// ----------------------------------------
 
 let payToken = "USDC";
 let receiveToken = "SOL";
 
+let walletAddress = null;
 
-// ================================
-// PRICES
-// ================================
+let quoteTimer = null;
+let refreshTimer = null;
 
-let prices = {
-    USDC: 1,
-    USDT: 1,
-    SOL: null,
-    ETH: null
-};
+let quoteRequestNumber = 0;
+
+let latestQuote = null;
 
 
-// ================================
-// TOKEN ICONS
-// ================================
+// ----------------------------------------
+// ELEMENTS
+// ----------------------------------------
 
-const icons = {
-    USDC: "💵",
-    USDT: "💵",
-    SOL: "◎",
-    ETH: "Ξ"
-};
+const payAmount =
+  document.getElementById("payAmount");
 
+const receiveAmount =
+  document.getElementById("receiveAmount");
 
-// ================================
-// TOKEN DROPDOWNS
-// ================================
+const payTokenButton =
+  document.getElementById("payTokenButton");
 
-payTokenButton.addEventListener("click", function(event) {
+const receiveTokenButton =
+  document.getElementById("receiveTokenButton");
 
-    event.stopPropagation();
+const payTokenMenu =
+  document.getElementById("payTokenMenu");
 
-    payTokenMenu.classList.toggle("open");
+const receiveTokenMenu =
+  document.getElementById("receiveTokenMenu");
 
-    receiveTokenMenu.classList.remove("open");
-});
+const payTokenName =
+  document.getElementById("payTokenName");
 
+const receiveTokenName =
+  document.getElementById("receiveTokenName");
 
-receiveTokenButton.addEventListener("click", function(event) {
+const payTokenIcon =
+  document.getElementById("payTokenIcon");
 
-    event.stopPropagation();
+const receiveTokenIcon =
+  document.getElementById("receiveTokenIcon");
 
-    receiveTokenMenu.classList.toggle("open");
+const switchTokens =
+  document.getElementById("switchTokens");
 
-    payTokenMenu.classList.remove("open");
-});
+const exchangeRate =
+  document.getElementById("exchangeRate");
 
+const quoteStatus =
+  document.getElementById("quoteStatus");
 
-// ================================
-// PAY TOKEN SELECTION
-// ================================
+const connectWallet =
+  document.getElementById("connectWallet");
 
-payTokenMenu.querySelectorAll("button").forEach(button => {
+const walletStatus =
+  document.getElementById("walletStatus");
 
-    button.addEventListener("click", function() {
-
-        payToken = this.dataset.token;
-
-        updateTokenDisplay();
-
-        payTokenMenu.classList.remove("open");
-
-        calculateSwap();
-    });
-
-});
+const swapButton =
+  document.getElementById("swapButton");
 
 
-// ================================
-// RECEIVE TOKEN SELECTION
-// ================================
-
-receiveTokenMenu.querySelectorAll("button").forEach(button => {
-
-    button.addEventListener("click", function() {
-
-        receiveToken = this.dataset.token;
-
-        updateTokenDisplay();
-
-        receiveTokenMenu.classList.remove("open");
-
-        calculateSwap();
-    });
-
-});
-
-
-// ================================
-// CLOSE DROPDOWNS
-// ================================
-
-document.addEventListener("click", function() {
-
-    payTokenMenu.classList.remove("open");
-
-    receiveTokenMenu.classList.remove("open");
-
-});
-
-
-// ================================
-// UPDATE TOKEN DISPLAY
-// ================================
+// ----------------------------------------
+// TOKEN DISPLAY
+// ----------------------------------------
 
 function updateTokenDisplay() {
 
-    payTokenName.textContent = payToken;
+  const pay =
+    TOKENS[payToken];
 
-    receiveTokenName.textContent = receiveToken;
+  const receive =
+    TOKENS[receiveToken];
 
-    payTokenIcon.textContent = icons[payToken];
 
-    receiveTokenIcon.textContent = icons[receiveToken];
+  if (pay) {
+
+    payTokenName.textContent =
+      pay.symbol;
+
+    payTokenIcon.textContent =
+      pay.icon;
+
+  }
+
+
+  if (receive) {
+
+    receiveTokenName.textContent =
+      receive.symbol;
+
+    receiveTokenIcon.textContent =
+      receive.icon;
+
+  }
+
 }
 
 
-// ================================
-// GET LIVE PRICES
-// ================================
+// ----------------------------------------
+// CLOSE DROPDOWNS
+// ----------------------------------------
 
-async function getLivePrices() {
+function closeMenus() {
 
-    marketStatus.textContent = "Updating...";
+  payTokenMenu.classList.remove("show");
 
-    try {
+  receiveTokenMenu.classList.remove("show");
 
-        const response = await fetch(
-            "https://api.binance.com/api/v3/ticker/price?symbols=%5B%22SOLUSDT%22,%22ETHUSDT%22%5D"
-        );
-
-        if (!response.ok) {
-            throw new Error("Price request failed");
-        }
-
-        const data = await response.json();
-
-
-        const solData = data.find(
-            coin => coin.symbol === "SOLUSDT"
-        );
-
-
-        const ethData = data.find(
-            coin => coin.symbol === "ETHUSDT"
-        );
-
-
-        if (solData) {
-            prices.SOL = Number(solData.price);
-        }
-
-
-        if (ethData) {
-            prices.ETH = Number(ethData.price);
-        }
-
-
-        marketStatus.textContent = "Live";
-
-        calculateSwap();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        marketStatus.textContent = "Offline";
-
-        exchangeRate.textContent = "Price unavailable";
-    }
 }
 
 
-// ================================
-// CALCULATE SWAP
-// ================================
+// ----------------------------------------
+// PAY TOKEN DROPDOWN
+// ----------------------------------------
 
-function calculateSwap() {
+payTokenButton.addEventListener(
+  "click",
+  function(event) {
 
-    const amount = Number(payAmount.value);
+    event.stopPropagation();
 
-    const fromPrice = prices[payToken];
-
-    const toPrice = prices[receiveToken];
-
-
-    if (
-        payAmount.value === "" ||
-        amount <= 0
-    ) {
-
-        receiveAmount.value = "";
-
-        exchangeRate.textContent = "Enter amount";
-
-        swapButton.textContent = "Enter amount";
-
-        return;
-    }
-
-
-    if (
-        fromPrice === null ||
-        toPrice === null
-    ) {
-
-        receiveAmount.value = "";
-
-        exchangeRate.textContent =
-            "Waiting for live price...";
-
-        return;
-    }
-
-
-    const usdValue = amount * fromPrice;
-
-    const result = usdValue / toPrice;
-
-
-    receiveAmount.value = formatNumber(result);
-
-
-    const oneTokenRate =
-        fromPrice / toPrice;
-
-
-    exchangeRate.textContent =
-        `1 ${payToken} ≈ ${formatNumber(oneTokenRate)} ${receiveToken}`;
-
-
-    swapButton.textContent =
-        `Swap ${payToken} → ${receiveToken}`;
-}
-
-
-// ================================
-// NUMBER FORMAT
-// ================================
-
-function formatNumber(number) {
-
-    return number.toLocaleString(
-        undefined,
-        {
-            maximumFractionDigits: 8
-        }
+    receiveTokenMenu.classList.remove(
+      "show"
     );
-}
 
+    payTokenMenu.classList.toggle(
+      "show"
+    );
 
-// ================================
-// AMOUNT INPUT
-// ================================
-
-payAmount.addEventListener(
-    "input",
-    calculateSwap
+  }
 );
 
 
-// ================================
-// SWITCH TOKENS
-// ================================
+// ----------------------------------------
+// RECEIVE TOKEN DROPDOWN
+// ----------------------------------------
 
-switchTokens.addEventListener(
-    "click",
-    function() {
+receiveTokenButton.addEventListener(
+  "click",
+  function(event) {
 
-        const oldPay = payToken;
+    event.stopPropagation();
 
-        payToken = receiveToken;
+    payTokenMenu.classList.remove(
+      "show"
+    );
 
-        receiveToken = oldPay;
+    receiveTokenMenu.classList.toggle(
+      "show"
+    );
+
+  }
+);
+
+
+// ----------------------------------------
+// CLOSE WHEN CLICKING OUTSIDE
+// ----------------------------------------
+
+document.addEventListener(
+  "click",
+  function() {
+
+    closeMenus();
+
+  }
+);
+
+
+// ----------------------------------------
+// PAY TOKEN SELECTION
+// ----------------------------------------
+
+payTokenMenu
+  .querySelectorAll("button")
+  .forEach(function(button) {
+
+    button.addEventListener(
+      "click",
+      function(event) {
+
+        event.stopPropagation();
+
+
+        const selected =
+          button.dataset.token;
+
+
+        if (!TOKENS[selected]) {
+          return;
+        }
+
+
+        // Prevent same token pair
+        if (
+          selected ===
+          receiveToken
+        ) {
+
+          receiveToken =
+            payToken;
+
+        }
+
+
+        payToken =
+          selected;
+
 
         updateTokenDisplay();
 
-        calculateSwap();
-    }
-);
+        closeMenus();
+
+        requestQuote();
+
+      }
+
+    );
+
+  });
 
 
-// ================================
-// SWAP BUTTON
-// ================================
+// ----------------------------------------
+// RECEIVE TOKEN SELECTION
+// ----------------------------------------
 
-swapButton.addEventListener(
-    "click",
-    function() {
+receiveTokenMenu
+  .querySelectorAll("button")
+  .forEach(function(button) {
 
-        const amount = Number(payAmount.value);
+    button.addEventListener(
+      "click",
+      function(event) {
 
-        if (!amount || amount <= 0) {
+        event.stopPropagation();
 
-            alert("Enter an amount first.");
 
-            return;
+        const selected =
+          button.dataset.token;
+
+
+        if (!TOKENS[selected]) {
+          return;
         }
 
 
-        alert(
-            `${amount} ${payToken} → ` +
-            `${receiveAmount.value} ${receiveToken}\n\n` +
-            `This is currently a price preview.`
-        );
-    }
-);
-
-
-// ==========================================
-// SOLANA WALLET CONNECTION
-// ==========================================
-
-connectWallet.addEventListener(
-    "click",
-    connectSolanaWallet
-);
-
-
-async function connectSolanaWallet() {
-
-    // Check for Phantom/Solana wallet
-
-    if (
-        !window.solana ||
-        !window.solana.isPhantom
-    ) {
-
-        alert(
-            "No Phantom wallet detected. " +
-            "Install Phantom or open TwinSwap inside Phantom's browser."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        // Ask wallet to connect
-
-        const response =
-            await window.solana.connect();
-
-
-        // Get public address
-
-        const publicKey =
-            response.publicKey.toString();
-
-
-        console.log(
-            "Connected wallet:",
-            publicKey
-        );
-
-
-        // Shorten address for display
-
-        const shortAddress =
-            publicKey.slice(0, 6) +
-            "..." +
-            publicKey.slice(-4);
-
-
-        walletStatus.textContent =
-            shortAddress;
-
-
-        connectWallet.textContent =
-            "Connected";
-
-
-        // Get SOL balance
-
-        await getSolBalance(publicKey);
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Wallet connection failed:",
-            error
-        );
-
-        alert(
-            "Wallet connection was cancelled or failed."
-        );
-    }
-}
-
-
-// ==========================================
-// GET REAL SOL BALANCE
-// ==========================================
-
-async function getSolBalance(publicKey) {
-
-    try {
-
-        const response = await fetch(
-            "https://api.mainnet-beta.solana.com",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-
-                    jsonrpc: "2.0",
-
-                    id: 1,
-
-                    method: "getBalance",
-
-                    params: [
-                        publicKey
-                    ]
-
-                })
-            }
-        );
-
-
-        const data =
-            await response.json();
-
-
+        // Prevent same token pair
         if (
-            data.result &&
-            data.result.value !== undefined
+          selected ===
+          payToken
         ) {
 
-            // Lamports → SOL
-
-            const lamports =
-                data.result.value;
-
-
-            const sol =
-                lamports / 1000000000;
-
-
-            balanceElement.textContent =
-                sol.toFixed(4);
-
-            console.log(
-                "Real SOL balance:",
-                sol
-            );
+          payToken =
+            receiveToken;
 
         }
 
-        else {
 
-            balanceElement.textContent =
-                "0.00";
+        receiveToken =
+          selected;
+
+
+        updateTokenDisplay();
+
+        closeMenus();
+
+        requestQuote();
+
+      }
+
+    );
+
+  });
+
+
+// ----------------------------------------
+// SWITCH TOKENS
+// ----------------------------------------
+
+switchTokens.addEventListener(
+  "click",
+  function() {
+
+    const oldPay =
+      payToken;
+
+
+    payToken =
+      receiveToken;
+
+
+    receiveToken =
+      oldPay;
+
+
+    updateTokenDisplay();
+
+    requestQuote();
+
+  }
+);
+
+
+// ----------------------------------------
+// NUMBER FORMAT
+// ----------------------------------------
+
+function formatNumber(value) {
+
+  const number =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(number)
+  ) {
+
+    return "0";
+
+  }
+
+
+  if (number === 0) {
+
+    return "0";
+
+  }
+
+
+  if (
+    number < 0.000001
+  ) {
+
+    return number.toExponential(5);
+
+  }
+
+
+  return number.toLocaleString(
+    undefined,
+    {
+      maximumFractionDigits: 8
+    }
+  );
+
+}
+
+
+// ----------------------------------------
+// BASE UNIT CONVERSION
+// ----------------------------------------
+
+function toBaseUnits(
+  amount,
+  decimals
+) {
+
+  const value =
+    Number(amount);
+
+
+  if (
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+
+    return null;
+
+  }
+
+
+  return Math.floor(
+    value *
+    Math.pow(
+      10,
+      decimals
+    )
+  ).toString();
+
+}
+
+
+// ----------------------------------------
+// REQUEST QUOTE
+// ----------------------------------------
+
+function requestQuote() {
+
+  clearTimeout(
+    quoteTimer
+  );
+
+
+  quoteTimer =
+    setTimeout(
+      runQuote,
+      250
+    );
+
+}
+
+
+// ----------------------------------------
+// LIVE JUPITER QUOTE
+// ----------------------------------------
+
+async function runQuote() {
+
+  const requestId =
+    ++quoteRequestNumber;
+
+
+  const amount =
+    Number(payAmount.value);
+
+
+  const input =
+    TOKENS[payToken];
+
+
+  const output =
+    TOKENS[receiveToken];
+
+
+  latestQuote =
+    null;
+
+
+  // ------------------------------------
+  // EMPTY AMOUNT
+  // ------------------------------------
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+
+    receiveAmount.value =
+      "";
+
+    exchangeRate.textContent =
+      "Enter an amount";
+
+    quoteStatus.textContent =
+      "Ready";
+
+    swapButton.disabled =
+      true;
+
+    swapButton.textContent =
+      "Enter amount";
+
+    return;
+
+  }
+
+
+  // ------------------------------------
+  // SAME TOKEN
+  // ------------------------------------
+
+  if (
+    payToken ===
+    receiveToken
+  ) {
+
+    receiveAmount.value =
+      formatNumber(amount);
+
+    exchangeRate.textContent =
+      "1 : 1";
+
+    quoteStatus.textContent =
+      "Choose different tokens";
+
+    swapButton.disabled =
+      true;
+
+    swapButton.textContent =
+      "Choose different tokens";
+
+    return;
+
+  }
+
+
+  // ------------------------------------
+  // TOKEN CHECK
+  // ------------------------------------
+
+  if (
+    !input ||
+    !output
+  ) {
+
+    return;
+
+  }
+
+
+  // ------------------------------------
+  // CONVERT AMOUNT
+  // ------------------------------------
+
+  const rawAmount =
+    toBaseUnits(
+      amount,
+      input.decimals
+    );
+
+
+  if (!rawAmount) {
+
+    return;
+
+  }
+
+
+  // ------------------------------------
+  // LOADING STATE
+  // ------------------------------------
+
+  quoteStatus.textContent =
+    "Fetching live quote...";
+
+  exchangeRate.textContent =
+    "Loading...";
+
+  receiveAmount.value =
+    "";
+
+  swapButton.disabled =
+    true;
+
+  swapButton.textContent =
+    "Getting quote...";
+
+
+  // ------------------------------------
+  // BUILD JUPITER REQUEST
+  // ------------------------------------
+
+  try {
+
+    const url =
+      new URL(
+        JUPITER_QUOTE_URL
+      );
+
+
+    url.searchParams.set(
+      "inputMint",
+      input.mint
+    );
+
+
+    url.searchParams.set(
+      "outputMint",
+      output.mint
+    );
+
+
+    url.searchParams.set(
+      "amount",
+      rawAmount
+    );
+
+
+    url.searchParams.set(
+      "slippageBps",
+      "50"
+    );
+
+
+    console.log(
+      "TwinSwap quote:",
+      url.toString()
+    );
+
+
+    // --------------------------------
+    // FETCH
+    // --------------------------------
+
+    const response =
+      await fetch(
+        url.toString(),
+        {
+          method: "GET",
+          headers: {
+            "Accept":
+              "application/json"
+          }
         }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    console.log(
+      "Jupiter response:",
+      data
+    );
+
+
+    // --------------------------------
+    // IGNORE OLD REQUEST
+    // --------------------------------
+
+    if (
+      requestId !==
+      quoteRequestNumber
+    ) {
+
+      return;
 
     }
+
+
+    // --------------------------------
+    // API ERROR
+    // --------------------------------
+
+    if (!response.ok) {
+
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        `Jupiter error ${response.status}`
+      );
+
+    }
+
+
+    // --------------------------------
+    // NO ROUTE
+    // --------------------------------
+
+    if (
+      !data ||
+      !data.outAmount
+    ) {
+
+      throw new Error(
+        "No swap route found"
+      );
+
+    }
+
+
+    // --------------------------------
+    // OUTPUT AMOUNT
+    // --------------------------------
+
+    const outputAmount =
+      Number(
+        data.outAmount
+      ) /
+      Math.pow(
+        10,
+        output.decimals
+      );
+
+
+    if (
+      !Number.isFinite(
+        outputAmount
+      )
+    ) {
+
+      throw new Error(
+        "Invalid quote amount"
+      );
+
+    }
+
+
+    // --------------------------------
+    // EXCHANGE RATE
+    // --------------------------------
+
+    const rate =
+      outputAmount /
+      amount;
+
+
+    // --------------------------------
+    // SAVE QUOTE
+    // --------------------------------
+
+    latestQuote =
+      data;
+
+
+    // --------------------------------
+    // DISPLAY RESULT
+    // --------------------------------
+
+    receiveAmount.value =
+      formatNumber(
+        outputAmount
+      );
+
+
+    exchangeRate.textContent =
+      `1 ${input.symbol} ≈ ${formatNumber(rate)} ${output.symbol}`;
+
+
+    quoteStatus.textContent =
+      "Live Jupiter quote";
+
+
+    swapButton.disabled =
+      false;
+
+
+    swapButton.textContent =
+      `Swap ${input.symbol} → ${output.symbol}`;
+
+  }
+
+
+  catch (error) {
+
+    if (
+      requestId !==
+      quoteRequestNumber
+    ) {
+
+      return;
+
+    }
+
+
+    console.error(
+      "TwinSwap quote error:",
+      error
+    );
+
+
+    receiveAmount.value =
+      "—";
+
+
+    exchangeRate.textContent =
+      "Quote unavailable";
+
+
+    quoteStatus.textContent =
+      error.message ||
+      "Could not get live quote";
+
+
+    swapButton.disabled =
+      true;
+
+
+    swapButton.textContent =
+      "Quote unavailable";
+
+  }
+
+}
+
+
+// ----------------------------------------
+// AMOUNT INPUT
+// ----------------------------------------
+
+payAmount.addEventListener(
+  "input",
+  requestQuote
+);
+
+
+// ----------------------------------------
+// AUTO REFRESH LIVE RATE
+// ----------------------------------------
+
+function startQuoteRefresh() {
+
+  clearInterval(
+    refreshTimer
+  );
+
+
+  refreshTimer =
+    setInterval(
+      function() {
+
+        if (
+          payAmount.value &&
+          Number(payAmount.value) > 0
+        ) {
+
+          requestQuote();
+
+        }
+
+      },
+      10000
+    );
+
+}
+
+
+startQuoteRefresh();
+
+
+// ----------------------------------------
+// PHANTOM PROVIDER
+// ----------------------------------------
+
+function getPhantomProvider() {
+
+  if (
+    window.solana &&
+    window.solana.isPhantom
+  ) {
+
+    return window.solana;
+
+  }
+
+
+  return null;
+
+}
+
+
+// ----------------------------------------
+// CONNECT PHANTOM
+// ----------------------------------------
+
+connectWallet.addEventListener(
+  "click",
+  async function() {
+
+    const provider =
+      getPhantomProvider();
+
+
+    if (!provider) {
+
+      alert(
+        "Phantom was not detected. Open TwinSwap inside Phantom or install the Phantom browser extension."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const response =
+        await provider.connect();
+
+
+      walletAddress =
+        response.publicKey.toString();
+
+
+      walletStatus.textContent =
+        walletAddress.slice(0, 4) +
+        "..." +
+        walletAddress.slice(-4);
+
+
+      connectWallet.textContent =
+        "Wallet Connected";
+
+
+      quoteStatus.textContent =
+        "Phantom connected";
+
+    }
+
 
     catch (error) {
 
-        console.error(
-            "Could not read SOL balance:",
-            error
-        );
+      console.error(
+        "Phantom connection error:",
+        error
+      );
 
-        balanceElement.textContent =
-            "0.00";
+
+      quoteStatus.textContent =
+        "Wallet connection cancelled";
+
     }
-}
+
+  }
+);
 
 
-// ==========================================
-// AUTO-DETECT ALREADY CONNECTED WALLET
-// ==========================================
-
-async function checkExistingWallet() {
-
-    if (
-        window.solana &&
-        window.solana.isPhantom
-    ) {
-
-        try {
-
-            const response =
-                await window.solana.connect({
-                    onlyIfTrusted: true
-                });
-
-
-            if (response.publicKey) {
-
-                const publicKey =
-                    response.publicKey.toString();
-
-
-                walletStatus.textContent =
-                    publicKey.slice(0, 6) +
-                    "..." +
-                    publicKey.slice(-4);
-
-
-                connectWallet.textContent =
-                    "Connected";
-
-
-                await getSolBalance(
-                    publicKey
-                );
-            }
-
-        }
-
-        catch (error) {
-
-            // No previously approved connection.
-            console.log(
-                "No existing wallet connection."
-            );
-        }
-    }
-}
-
-
-// ==========================================
-// WALLET DISCONNECTED
-// ==========================================
+// ----------------------------------------
+// PHANTOM DISCONNECT
+// ----------------------------------------
 
 if (window.solana) {
 
-    window.solana.on(
-        "disconnect",
-        function() {
+  window.solana.on(
+    "disconnect",
+    function() {
 
-            walletStatus.textContent =
-                "Not connected";
+      walletAddress =
+        null;
 
-            connectWallet.textContent =
-                "Connect Wallet";
 
-            balanceElement.textContent =
-                "0.00";
-        }
-    );
+      walletStatus.textContent =
+        "Not connected";
+
+
+      connectWallet.textContent =
+        "Connect Wallet";
+
+    }
+  );
+
 }
 
 
-// ==========================================
-// START TWIN SWAP
-// ==========================================
+// ----------------------------------------
+// SWAP BUTTON
+// ----------------------------------------
+
+swapButton.addEventListener(
+  "click",
+  function() {
+
+    if (!walletAddress) {
+
+      alert(
+        "Connect Phantom first."
+      );
+
+      return;
+
+    }
+
+
+    if (!latestQuote) {
+
+      requestQuote();
+
+      return;
+
+    }
+
+
+    alert(
+      "Live quote confirmed. Transaction execution will be added in the next phase."
+    );
+
+  }
+);
+
+
+// ----------------------------------------
+// INITIALIZE
+// ----------------------------------------
 
 updateTokenDisplay();
 
-getLivePrices();
 
-checkExistingWallet();
-
-
-// Update prices every 15 seconds
-
-setInterval(
-    getLivePrices,
-    15000
+console.log(
+  "TwinSwap loaded successfully."
 );
