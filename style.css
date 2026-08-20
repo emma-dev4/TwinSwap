@@ -1,0 +1,660 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #171329 0%,
+            #08080d 45%
+        );
+
+    color: white;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+    height: 75px;
+
+    padding: 0 7%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #242331;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.logo span {
+    color: #8b5cf6;
+}
+
+#connectWallet {
+    border: 1px solid #8b5cf6;
+
+    background: #8b5cf6;
+
+    color: white;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#connectWallet:hover {
+    background: #7045d8;
+}
+
+
+/* =========================
+   MAIN
+========================= */
+
+main {
+    width: min(100% - 30px, 1000px);
+
+    margin: auto;
+
+    padding: 65px 0;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+    text-align: center;
+
+    margin-bottom: 40px;
+}
+
+.live-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 12px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #29263b;
+
+    border-radius: 20px;
+
+    background: #11101b;
+
+    color: #a8a2c4;
+
+    font-size: 11px;
+
+    font-weight: bold;
+}
+
+.live-badge span {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #46e39b;
+
+    box-shadow:
+        0 0 10px #46e39b;
+}
+
+.hero h1 {
+    font-size: clamp(48px, 8vw, 75px);
+
+    line-height: .98;
+
+    letter-spacing: -3px;
+}
+
+.hero h1 span {
+    color: #8b5cf6;
+}
+
+.hero p {
+    margin-top: 20px;
+
+    color: #898796;
+
+    font-size: 16px;
+}
+
+
+/* =========================
+   SWAP CARD
+========================= */
+
+.swap-card {
+    width: 100%;
+
+    max-width: 510px;
+
+    margin: auto;
+
+    padding: 22px;
+
+    position: relative;
+
+    background: #101017;
+
+    border: 1px solid #292936;
+
+    border-radius: 25px;
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.35);
+}
+
+.swap-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.swap-header h2 {
+    font-size: 22px;
+}
+
+.swap-header p {
+    margin-top: 4px;
+
+    color: #777684;
+
+    font-size: 12px;
+}
+
+#walletStatus {
+    color: #858493;
+
+    font-size: 12px;
+}
+
+
+/* =========================
+   TOKEN BOX
+========================= */
+
+.token-box {
+    position: relative;
+
+    background: #191922;
+
+    border: 1px solid #292936;
+
+    border-radius: 18px;
+
+    padding: 18px;
+}
+
+.box-top {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    color: #888794;
+
+    font-size: 13px;
+
+    margin-bottom: 14px;
+}
+
+.box-top b {
+    color: white;
+}
+
+
+/* =========================
+   AMOUNT
+========================= */
+
+.amount-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.amount-row input {
+    width: 100%;
+
+    min-width: 0;
+
+    background: transparent;
+
+    border: none;
+
+    outline: none;
+
+    color: white;
+
+    font-size: 30px;
+
+    font-weight: 700;
+}
+
+.amount-row input::placeholder {
+    color: #454551;
+}
+
+
+/* =========================
+   CUSTOM TOKEN BUTTON
+========================= */
+
+.token-button {
+    height: 50px;
+
+    min-width: 125px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    border: 1px solid #363644;
+
+    border-radius: 14px;
+
+    background: #282832;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.token-button:hover {
+    background: #32323e;
+
+    border-color: #8b5cf6;
+}
+
+.token-button .arrow {
+    color: #898796;
+
+    font-size: 13px;
+}
+
+
+/* =========================
+   TOKEN MENU
+========================= */
+
+.token-menu {
+    display: none;
+
+    position: absolute;
+
+    right: 18px;
+
+    top: 77px;
+
+    width: 230px;
+
+    z-index: 50;
+
+    padding: 8px;
+
+    background: #1c1c27;
+
+    border: 1px solid #363544;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.55);
+}
+
+.token-menu.open {
+    display: block;
+}
+
+.token-menu button {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: 30px 1fr;
+
+    grid-template-rows: 20px 17px;
+
+    column-gap: 8px;
+
+    align-items: center;
+
+    padding: 10px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: white;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.token-menu button:hover {
+    background: #2b2b38;
+}
+
+.token-menu button span {
+    grid-row: 1 / 3;
+
+    font-size: 20px;
+
+    text-align: center;
+}
+
+.token-menu button strong {
+    font-size: 14px;
+}
+
+.token-menu button small {
+    color: #777684;
+
+    font-size: 11px;
+}
+
+
+/* =========================
+   SWITCH
+========================= */
+
+.switch-button {
+    display: block;
+
+    width: 44px;
+    height: 44px;
+
+    margin: -10px auto;
+
+    position: relative;
+
+    z-index: 20;
+
+    border: 4px solid #101017;
+
+    border-radius: 50%;
+
+    background: #8b5cf6;
+
+    color: white;
+
+    font-size: 21px;
+
+    cursor: pointer;
+
+    transition: .25s;
+}
+
+.switch-button:hover {
+    transform: rotate(180deg);
+
+    background: #a278ff;
+}
+
+
+/* =========================
+   RATE
+========================= */
+
+.rate-box {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin: 20px 3px;
+
+    padding: 14px;
+
+    background: #15151e;
+
+    border-radius: 13px;
+
+    font-size: 12px;
+}
+
+.rate-box div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.rate-box span {
+    color: #777684;
+}
+
+.rate-box strong {
+    color: #c8c5d5;
+
+    font-size: 12px;
+}
+
+#marketStatus {
+    color: #46e39b;
+}
+
+
+/* =========================
+   SWAP BUTTON
+========================= */
+
+.swap-button {
+    width: 100%;
+
+    padding: 17px;
+
+    border: none;
+
+    border-radius: 15px;
+
+    background: #8b5cf6;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.swap-button:hover {
+    background: #7045d8;
+}
+
+.swap-button:disabled {
+    opacity: .5;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================
+   DISCLAIMER
+========================= */
+
+.disclaimer {
+    margin-top: 14px;
+
+    color: #62616d;
+
+    text-align: center;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================
+   FEATURES
+========================= */
+
+.features {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 18px;
+
+    margin-top: 60px;
+}
+
+.feature {
+    padding: 24px;
+
+    background: #101017;
+
+    border: 1px solid #20202b;
+
+    border-radius: 18px;
+}
+
+.feature-icon {
+    font-size: 24px;
+
+    margin-bottom: 12px;
+}
+
+.feature h3 {
+    margin-bottom: 8px;
+}
+
+.feature p {
+    color: #777684;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    padding: 30px;
+
+    color: #555563;
+
+    text-align: center;
+
+    font-size: 12px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+
+    .navbar {
+        padding: 0 16px;
+    }
+
+    main {
+        padding: 45px 0;
+    }
+
+    .hero h1 {
+        font-size: 48px;
+
+        letter-spacing: -2px;
+    }
+
+    .swap-card {
+        padding: 17px;
+    }
+
+    .amount-row input {
+        font-size: 23px;
+    }
+
+    .token-button {
+        min-width: 110px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 400px) {
+
+    .hero h1 {
+        font-size: 41px;
+    }
+
+    .token-button {
+        min-width: 100px;
+
+        font-size: 13px;
+    }
+
+    .rate-box {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 12px;
+    }
+}

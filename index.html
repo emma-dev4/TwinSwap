@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TwinSwap</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        Twin<span>Swap</span>
+    </div>
+
+    <button id="connectWallet">
+        Connect Wallet
+    </button>
+
+</header>
+
+
+<main>
+
+    <section class="hero">
+
+        <div class="live-badge">
+            <span></span> LIVE PRICES
+        </div>
+
+        <h1>
+            Swap crypto.<br>
+            <span>Keep it simple.</span>
+        </h1>
+
+        <p>
+            Fast and simple token swapping powered by Web3.
+        </p>
+
+    </section>
+
+
+    <section class="swap-card">
+
+        <div class="swap-header">
+
+            <div>
+                <h2>Swap</h2>
+                <p>Trade tokens instantly</p>
+            </div>
+
+            <div id="walletStatus">
+                Not connected
+            </div>
+
+        </div>
+
+
+        <!-- PAY -->
+
+        <div class="token-box">
+
+            <div class="box-top">
+
+                <span>You pay</span>
+
+                <span>
+                    Balance: <b id="balance">0.00</b>
+                </span>
+
+            </div>
+
+
+            <div class="amount-row">
+
+                <input
+                    id="payAmount"
+                    type="number"
+                    min="0"
+                    placeholder="0.00"
+                >
+
+
+                <button
+                    class="token-button"
+                    id="payTokenButton"
+                    type="button"
+                >
+
+                    <span id="payTokenIcon">💵</span>
+
+                    <span id="payTokenName">
+                        USDC
+                    </span>
+
+                    <span class="arrow">
+                        ▾
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- PAY TOKEN MENU -->
+
+            <div
+                class="token-menu"
+                id="payTokenMenu"
+            >
+
+                <button data-token="USDC">
+                    <span>💵</span>
+                    <strong>USDC</strong>
+                    <small>USD Coin</small>
+                </button>
+
+                <button data-token="USDT">
+                    <span>💵</span>
+                    <strong>USDT</strong>
+                    <small>Tether</small>
+                </button>
+
+                <button data-token="SOL">
+                    <span>◎</span>
+                    <strong>SOL</strong>
+                    <small>Solana</small>
+                </button>
+
+                <button data-token="ETH">
+                    <span>Ξ</span>
+                    <strong>ETH</strong>
+                    <small>Ethereum</small>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- SWITCH -->
+
+        <button
+            id="switchTokens"
+            class="switch-button"
+            type="button"
+        >
+            ⇅
+        </button>
+
+
+        <!-- RECEIVE -->
+
+        <div class="token-box">
+
+            <div class="box-top">
+
+                <span>You receive</span>
+
+                <span>
+                    Estimated
+                </span>
+
+            </div>
+
+
+            <div class="amount-row">
+
+                <input
+                    id="receiveAmount"
+                    type="text"
+                    placeholder="0.00"
+                    readonly
+                >
+
+
+                <button
+                    class="token-button"
+                    id="receiveTokenButton"
+                    type="button"
+                >
+
+                    <span id="receiveTokenIcon">◎</span>
+
+                    <span id="receiveTokenName">
+                        SOL
+                    </span>
+
+                    <span class="arrow">
+                        ▾
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- RECEIVE TOKEN MENU -->
+
+            <div
+                class="token-menu"
+                id="receiveTokenMenu"
+            >
+
+                <button data-token="USDC">
+                    <span>💵</span>
+                    <strong>USDC</strong>
+                    <small>USD Coin</small>
+                </button>
+
+                <button data-token="USDT">
+                    <span>💵</span>
+                    <strong>USDT</strong>
+                    <small>Tether</small>
+                </button>
+
+                <button data-token="SOL">
+                    <span>◎</span>
+                    <strong>SOL</strong>
+                    <small>Solana</small>
+                </button>
+
+                <button data-token="ETH">
+                    <span>Ξ</span>
+                    <strong>ETH</strong>
+                    <small>Ethereum</small>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- RATE -->
+
+        <div class="rate-box">
+
+            <div>
+                <span>Exchange rate</span>
+                <strong id="exchangeRate">
+                    Loading...
+                </strong>
+            </div>
+
+            <div>
+                <span>Market</span>
+                <strong id="marketStatus">
+                    Connecting...
+                </strong>
+            </div>
+
+        </div>
+
+
+        <button
+            id="swapButton"
+            class="swap-button"
+            type="button"
+        >
+            Enter amount
+        </button>
+
+
+        <p class="disclaimer">
+            Prices are fetched from live public market data.
+            This demo does not execute real swaps yet.
+        </p>
+
+    </section>
+
+
+    <!-- FEATURES -->
+
+    <section class="features">
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                ⚡
+            </div>
+
+            <h3>Fast</h3>
+
+            <p>
+                Quick token price calculations.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                📈
+            </div>
+
+            <h3>Live Prices</h3>
+
+            <p>
+                Market prices update automatically.
+            </p>
+
+        </div>
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                🔐
+            </div>
+
+            <h3>Web3 Ready</h3>
+
+            <p>
+                Built to connect with crypto wallets.
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    TwinSwap © 2026
+</footer>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
