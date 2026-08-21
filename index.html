@@ -3,392 +3,733 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>TwinSwap</title>
+
+  <meta
+    name="description"
+    content="TwinSwap — simple and fast Solana token swapping."
+  >
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header class="hero">
-  <div class="brand">Twin<span>Swap</span></div>
+  <!-- ================= HERO ================= -->
 
-  <h1>Swap crypto.<br><span>Keep it simple.</span></h1>
+  <header class="hero">
 
-  <p>Fast and simple token swapping powered by Solana.</p>
-</header>
-
-<main>
-
-  <nav class="main-nav">
-    <button class="nav-button active" data-tab="swapTab">Swap</button>
-    <button class="nav-button" data-tab="portfolioTab">Portfolio</button>
-  </nav>
-
-  <!-- ================= SWAP ================= -->
-
-  <section id="swapTab" class="tab-content active">
-
-    <div class="swap-card">
-
-      <div class="swap-top">
-        <h2>Swap</h2>
-        <span id="walletStatus">Not connected</span>
-      </div>
-
-      <div class="token-box">
-
-        <div class="box-label">
-          <span>You pay</span>
-          <span>Balance: <b id="payBalance">0.00</b></span>
-        </div>
-
-        <div class="token-row">
-
-          <input
-            id="payAmount"
-            type="number"
-            min="0"
-            step="any"
-            placeholder="0.00"
-          >
-
-          <div class="token-select">
-
-            <button id="payTokenButton" class="token-button">
-              <span id="payTokenIcon">💵</span>
-              <span id="payTokenName">USDC</span>
-              <span class="arrow">⌄</span>
-            </button>
-
-            <div id="payTokenMenu" class="token-menu">
-
-              <button data-token="USDC">💵 USDC</button>
-              <button data-token="USDT">💵 USDT</button>
-              <button data-token="SOL">◎ SOL</button>
-              <button data-token="JUP">🪐 JUP</button>
-              <button data-token="BONK">🐕 BONK</button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <button id="switchTokens" class="switch-button">⇅</button>
-
-      <div class="token-box">
-
-        <div class="box-label">
-          <span>You receive</span>
-          <span>Estimated</span>
-        </div>
-
-        <div class="token-row">
-
-          <input
-            id="receiveAmount"
-            type="text"
-            placeholder="0.00"
-            readonly
-          >
-
-          <div class="token-select">
-
-            <button id="receiveTokenButton" class="token-button">
-              <span id="receiveTokenIcon">◎</span>
-              <span id="receiveTokenName">SOL</span>
-              <span class="arrow">⌄</span>
-            </button>
-
-            <div id="receiveTokenMenu" class="token-menu">
-
-              <button data-token="USDC">💵 USDC</button>
-              <button data-token="USDT">💵 USDT</button>
-              <button data-token="SOL">◎ SOL</button>
-              <button data-token="JUP">🪐 JUP</button>
-              <button data-token="BONK">🐕 BONK</button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="rate-box">
-        <span>Exchange rate</span>
-        <strong id="exchangeRate">Enter an amount</strong>
-      </div>
-
-      <div id="quoteStatus" class="quote-status">
-        Ready
-      </div>
-
-      <button id="connectWallet" class="connect-button">
-        Connect Wallet
-      </button>
-
-      <button id="swapButton" class="swap-button" disabled>
-        Enter amount
-      </button>
-
+    <div class="brand">
+      Twin<span>Swap</span>
     </div>
 
-  </section>
+    <div class="hero-badge">
+      <span class="status-dot"></span>
+      Solana powered
+    </div>
+
+    <h1>
+      Swap crypto.<br>
+      <span>Keep it simple.</span>
+    </h1>
+
+    <p>
+      Fast and simple token swapping powered by Solana.
+    </p>
+
+  </header>
 
 
-  <!-- ================= PORTFOLIO ================= -->
+  <main>
 
-  <section id="portfolioTab" class="tab-content">
+    <!-- ================= NAV ================= -->
 
-    <div class="portfolio-card">
+    <nav class="main-nav">
 
-      <div class="portfolio-header">
+      <button
+        class="nav-button active"
+        data-tab="swapTab"
+      >
+        <span>⇄</span>
+        Swap
+      </button>
 
-        <div>
-          <span class="portfolio-label">
-            Total Portfolio
-          </span>
+      <button
+        class="nav-button"
+        data-tab="portfolioTab"
+      >
+        <span>◈</span>
+        Portfolio
+      </button>
 
-          <h2 id="portfolioTotal">
-            $0.00
-          </h2>
+    </nav>
+
+
+    <!-- ================= SWAP ================= -->
+
+    <section
+      id="swapTab"
+      class="tab-content active"
+    >
+
+      <div class="swap-card">
+
+        <div class="card-heading">
+
+          <div>
+            <span class="eyebrow">TRADE</span>
+            <h2>Swap</h2>
+          </div>
+
+          <div
+            id="walletStatus"
+            class="wallet-status"
+          >
+            Not connected
+          </div>
+
         </div>
 
+
+        <!-- PAY -->
+
+        <div class="token-box">
+
+          <div class="box-label">
+
+            <span>You pay</span>
+
+            <span>
+              Balance:
+              <b id="payBalance">0.00</b>
+            </span>
+
+          </div>
+
+          <div class="token-row">
+
+            <input
+              id="payAmount"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="0.00"
+              autocomplete="off"
+            >
+
+            <div class="token-select">
+
+              <button
+                id="payTokenButton"
+                class="token-button"
+                type="button"
+              >
+
+                <span id="payTokenIcon">💵</span>
+                <span id="payTokenName">USDC</span>
+                <span class="arrow">⌄</span>
+
+              </button>
+
+              <div
+                id="payTokenMenu"
+                class="token-menu"
+              >
+
+                <button data-token="USDC" type="button">
+                  <span>💵</span>
+                  USDC
+                </button>
+
+                <button data-token="USDT" type="button">
+                  <span>💵</span>
+                  USDT
+                </button>
+
+                <button data-token="SOL" type="button">
+                  <span>◎</span>
+                  SOL
+                </button>
+
+                <button data-token="JUP" type="button">
+                  <span>🪐</span>
+                  JUP
+                </button>
+
+                <button data-token="BONK" type="button">
+                  <span>🐕</span>
+                  BONK
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SWITCH -->
+
         <button
-          id="refreshPortfolio"
-          class="refresh-button"
-          title="Refresh portfolio"
+          id="switchTokens"
+          class="switch-button"
+          type="button"
+          aria-label="Switch tokens"
         >
-          ↻
+          ⇅
+        </button>
+
+
+        <!-- RECEIVE -->
+
+        <div class="token-box">
+
+          <div class="box-label">
+
+            <span>You receive</span>
+
+            <span>Estimated</span>
+
+          </div>
+
+          <div class="token-row">
+
+            <input
+              id="receiveAmount"
+              type="text"
+              placeholder="0.00"
+              readonly
+            >
+
+            <div class="token-select">
+
+              <button
+                id="receiveTokenButton"
+                class="token-button"
+                type="button"
+              >
+
+                <span id="receiveTokenIcon">◎</span>
+                <span id="receiveTokenName">SOL</span>
+                <span class="arrow">⌄</span>
+
+              </button>
+
+              <div
+                id="receiveTokenMenu"
+                class="token-menu"
+              >
+
+                <button data-token="USDC" type="button">
+                  <span>💵</span>
+                  USDC
+                </button>
+
+                <button data-token="USDT" type="button">
+                  <span>💵</span>
+                  USDT
+                </button>
+
+                <button data-token="SOL" type="button">
+                  <span>◎</span>
+                  SOL
+                </button>
+
+                <button data-token="JUP" type="button">
+                  <span>🪐</span>
+                  JUP
+                </button>
+
+                <button data-token="BONK" type="button">
+                  <span>🐕</span>
+                  BONK
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RATE -->
+
+        <div class="rate-box">
+
+          <div>
+            <span class="rate-label">
+              Exchange rate
+            </span>
+
+            <strong id="exchangeRate">
+              Enter an amount
+            </strong>
+          </div>
+
+          <span class="live-pill">
+            LIVE
+          </span>
+
+        </div>
+
+
+        <div
+          id="quoteStatus"
+          class="quote-status"
+        >
+          Ready
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <button
+          id="connectWallet"
+          class="connect-button"
+          type="button"
+        >
+          Connect Wallet
+        </button>
+
+        <button
+          id="swapButton"
+          class="swap-button"
+          type="button"
+          disabled
+        >
+          Enter amount
         </button>
 
       </div>
 
-      <div class="portfolio-wallet">
+    </section>
 
-        <span>Wallet</span>
 
-        <strong id="portfolioWallet">
-          Not connected
-        </strong>
+    <!-- ================= PORTFOLIO ================= -->
 
-      </div>
+    <section
+      id="portfolioTab"
+      class="tab-content"
+    >
 
-      <div id="portfolioStatus" class="portfolio-status">
-        Connect Phantom to view your portfolio.
-      </div>
+      <div class="portfolio-card">
 
-      <div class="portfolio-summary">
+        <!-- HEADER -->
 
-        <div>
-          <span>Assets</span>
-          <strong id="portfolioAssetCount">0</strong>
+        <div class="portfolio-header">
+
+          <div>
+
+            <span class="eyebrow">
+              YOUR WALLET
+            </span>
+
+            <h2>Portfolio</h2>
+
+          </div>
+
+          <button
+            id="refreshPortfolio"
+            class="refresh-button"
+            type="button"
+            title="Refresh portfolio"
+            aria-label="Refresh portfolio"
+          >
+            ↻
+          </button>
+
         </div>
 
-        <div>
-          <span>Network</span>
-          <strong>Solana</strong>
+
+        <!-- TOTAL -->
+
+        <div class="portfolio-total-card">
+
+          <div class="total-top">
+
+            <span>
+              Total balance
+            </span>
+
+            <span
+              id="portfolioNetwork"
+              class="network-pill"
+            >
+              ● Solana
+            </span>
+
+          </div>
+
+          <div
+            id="portfolioTotal"
+            class="portfolio-total"
+          >
+            $0.00
+          </div>
+
+          <div
+            id="portfolioStatus"
+            class="portfolio-status"
+          >
+            Connect Phantom to view your portfolio.
+          </div>
+
         </div>
 
-      </div>
 
-      <div class="asset-list">
+        <!-- WALLET -->
 
-        <div class="asset-row">
+        <div class="portfolio-wallet">
 
-          <div class="asset-left">
+          <div class="wallet-icon">
+            ◈
+          </div>
 
-            <div class="asset-icon">
+          <div class="wallet-info">
+
+            <span>Connected wallet</span>
+
+            <strong id="portfolioWallet">
+              Not connected
+            </strong>
+
+          </div>
+
+          <div
+            id="walletConnectionDot"
+            class="connection-dot"
+          ></div>
+
+        </div>
+
+
+        <!-- STATS -->
+
+        <div class="portfolio-summary">
+
+          <div class="summary-card">
+
+            <div class="summary-icon">
+              ◈
+            </div>
+
+            <div>
+
+              <span>Assets</span>
+
+              <strong id="portfolioAssetCount">
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="summary-card">
+
+            <div class="summary-icon">
               ◎
             </div>
 
             <div>
-              <strong>SOL</strong>
-              <span>Solana</span>
+
+              <span>Network</span>
+
+              <strong>Solana</strong>
+
             </div>
-
-          </div>
-
-          <div class="asset-right">
-
-            <strong id="solBalance">
-              0
-            </strong>
-
-            <span id="solValue">
-              $0.00
-            </span>
 
           </div>
 
         </div>
 
 
-        <div class="asset-row">
+        <!-- ASSETS -->
 
-          <div class="asset-left">
+        <div class="assets-heading">
 
-            <div class="asset-icon">
-              💵
-            </div>
+          <span>Your assets</span>
 
-            <div>
-              <strong>USDC</strong>
-              <span>USD Coin</span>
-            </div>
-
-          </div>
-
-          <div class="asset-right">
-
-            <strong id="usdcBalance">
-              0
-            </strong>
-
-            <span id="usdcValue">
-              $0.00
-            </span>
-
-          </div>
+          <span id="assetCountLabel">
+            0 assets
+          </span>
 
         </div>
 
 
-        <div class="asset-row">
+        <div class="asset-list">
 
-          <div class="asset-left">
 
-            <div class="asset-icon">
-              💵
+          <!-- SOL -->
+
+          <div class="asset-row">
+
+            <div class="asset-left">
+
+              <div class="asset-icon sol-icon">
+                ◎
+              </div>
+
+              <div class="asset-name">
+
+                <strong>SOL</strong>
+                <span>Solana</span>
+
+              </div>
+
             </div>
 
-            <div>
-              <strong>USDT</strong>
-              <span>Tether</span>
+            <div class="asset-right">
+
+              <strong id="solBalance">
+                0
+              </strong>
+
+              <span id="solValue">
+                $0.00
+              </span>
+
             </div>
 
           </div>
 
-          <div class="asset-right">
 
-            <strong id="usdtBalance">
-              0
-            </strong>
+          <!-- USDC -->
 
-            <span id="usdtValue">
-              $0.00
-            </span>
+          <div class="asset-row">
+
+            <div class="asset-left">
+
+              <div class="asset-icon">
+                $
+              </div>
+
+              <div class="asset-name">
+
+                <strong>USDC</strong>
+                <span>USD Coin</span>
+
+              </div>
+
+            </div>
+
+            <div class="asset-right">
+
+              <strong id="usdcBalance">
+                0
+              </strong>
+
+              <span id="usdcValue">
+                $0.00
+              </span>
+
+            </div>
 
           </div>
+
+
+          <!-- USDT -->
+
+          <div class="asset-row">
+
+            <div class="asset-left">
+
+              <div class="asset-icon">
+                $
+              </div>
+
+              <div class="asset-name">
+
+                <strong>USDT</strong>
+                <span>Tether</span>
+
+              </div>
+
+            </div>
+
+            <div class="asset-right">
+
+              <strong id="usdtBalance">
+                0
+              </strong>
+
+              <span id="usdtValue">
+                $0.00
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- JUP -->
+
+          <div class="asset-row">
+
+            <div class="asset-left">
+
+              <div class="asset-icon">
+                🪐
+              </div>
+
+              <div class="asset-name">
+
+                <strong>JUP</strong>
+                <span>Jupiter</span>
+
+              </div>
+
+            </div>
+
+            <div class="asset-right">
+
+              <strong id="jupBalance">
+                0
+              </strong>
+
+              <span id="jupValue">
+                $0.00
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- BONK -->
+
+          <div class="asset-row">
+
+            <div class="asset-left">
+
+              <div class="asset-icon">
+                🐕
+              </div>
+
+              <div class="asset-name">
+
+                <strong>BONK</strong>
+                <span>Bonk</span>
+
+              </div>
+
+            </div>
+
+            <div class="asset-right">
+
+              <strong id="bonkBalance">
+                0
+              </strong>
+
+              <span id="bonkValue">
+                $0.00
+              </span>
+
+            </div>
+
+          </div>
+
 
         </div>
 
 
-        <div class="asset-row">
+        <!-- EMPTY STATE -->
 
-          <div class="asset-left">
+        <div
+          id="portfolioEmpty"
+          class="portfolio-empty"
+          hidden
+        >
 
-            <div class="asset-icon">
-              🪐
-            </div>
-
-            <div>
-              <strong>JUP</strong>
-              <span>Jupiter</span>
-            </div>
-
+          <div class="empty-icon">
+            ◈
           </div>
 
-          <div class="asset-right">
+          <strong>No assets yet</strong>
 
-            <strong id="jupBalance">
-              0
-            </strong>
-
-            <span id="jupValue">
-              $0.00
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="asset-row">
-
-          <div class="asset-left">
-
-            <div class="asset-icon">
-              🐕
-            </div>
-
-            <div>
-              <strong>BONK</strong>
-              <span>Bonk</span>
-            </div>
-
-          </div>
-
-          <div class="asset-right">
-
-            <strong id="bonkBalance">
-              0
-            </strong>
-
-            <span id="bonkValue">
-              $0.00
-            </span>
-
-          </div>
+          <span>
+            Your wallet currently has no supported tokens.
+          </span>
 
         </div>
 
       </div>
 
-    </div>
-
-  </section>
+    </section>
 
 
-  <!-- ================= INFO ================= -->
+    <!-- ================= INFO ================= -->
 
-  <section class="info-section">
+    <section class="info-section">
 
-    <div>
-      <h3>⚡ Fast</h3>
-      <p>
-        Get live swap quotes through Solana liquidity.
-      </p>
-    </div>
+      <div class="info-card">
 
-    <div>
-      <h3>🔒 Non-custodial</h3>
-      <p>
-        Your wallet stays under your control.
-      </p>
-    </div>
+        <div class="info-icon">⚡</div>
 
-    <div>
-      <h3>🌐 Web3</h3>
-      <p>
-        Built for the Solana ecosystem.
-      </p>
-    </div>
+        <div>
 
-  </section>
+          <h3>Fast</h3>
 
-</main>
+          <p>
+            Get live swap quotes through Solana liquidity.
+          </p>
 
-<footer>
-  <p>©️ 2026 TwinSwap</p>
-</footer>
+        </div>
 
-<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-<script src="script.js"></script>
+      </div>
+
+
+      <div class="info-card">
+
+        <div class="info-icon">🔒</div>
+
+        <div>
+
+          <h3>Non-custodial</h3>
+
+          <p>
+            Your wallet stays under your control.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="info-card">
+
+        <div class="info-icon">🌐</div>
+
+        <div>
+
+          <h3>Web3</h3>
+
+          <p>
+            Built for the Solana ecosystem.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    <p>© 2026 TwinSwap</p>
+  </footer>
+
+
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
