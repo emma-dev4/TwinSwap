@@ -7,8 +7,15 @@
 body {
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
+
   background:
-    radial-gradient(circle at top, #202c55 0%, #0b1020 45%, #060812 100%);
+    radial-gradient(
+      circle at top,
+      #202c55 0%,
+      #0b1020 45%,
+      #060812 100%
+    );
+
   color: white;
   padding: 30px 18px;
 }
@@ -45,23 +52,26 @@ body {
   font-size: 17px;
 }
 
-
 main {
   max-width: 520px;
   margin: auto;
 }
 
-
-.swap-card {
+.swap-card,
+.portfolio-card {
   position: relative;
   padding: 24px;
+
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 28px;
-  background: rgba(18, 25, 48, 0.82);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-}
 
+  background: rgba(18, 25, 48, 0.82);
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,0.4);
+}
 
 .swap-top {
   display: flex;
@@ -79,21 +89,26 @@ main {
   color: #9da7c2;
 }
 
-
 .token-box {
   position: relative;
+
   padding: 18px;
+
   border-radius: 20px;
+
   background: rgba(255,255,255,0.055);
+
   border: 1px solid rgba(255,255,255,0.08);
 }
-
 
 .box-label {
   display: flex;
   justify-content: space-between;
+
   color: #9da7c2;
+
   font-size: 13px;
+
   margin-bottom: 10px;
 }
 
@@ -101,40 +116,40 @@ main {
   color: white;
 }
 
-
 .token-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-
 .token-row input {
   width: 100%;
   min-width: 0;
+
   background: transparent;
   border: none;
   outline: none;
+
   color: white;
+
   font-size: 32px;
   font-weight: 600;
 }
-
 
 .token-row input::placeholder {
   color: #67718d;
 }
 
-
 .token-select {
   position: relative;
 }
 
-
 .token-button {
   min-width: 130px;
   height: 52px;
+
   padding: 0 15px;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,31 +159,32 @@ main {
   border-radius: 16px;
 
   background: rgba(255,255,255,0.07);
+
   color: white;
 
   font-size: 15px;
   font-weight: 700;
 
   cursor: pointer;
+
   transition: 0.2s;
 }
-
 
 .token-button:hover {
   background: rgba(124,108,255,0.2);
   border-color: #7c6cff;
 }
 
-
 .arrow {
   color: #9da7c2;
   font-size: 18px;
 }
 
-
 .token-menu {
   position: absolute;
+
   z-index: 100;
+
   right: 0;
   top: calc(100% + 8px);
 
@@ -181,19 +197,19 @@ main {
   border-radius: 16px;
 
   background: #151c35;
+
   border: 1px solid rgba(255,255,255,0.12);
 
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-
 .token-menu.show {
   display: block;
 }
 
-
 .token-menu button {
   width: 100%;
+
   padding: 13px 12px;
 
   border: none;
@@ -203,16 +219,15 @@ main {
   color: white;
 
   text-align: left;
+
   font-size: 15px;
 
   cursor: pointer;
 }
 
-
 .token-menu button:hover {
   background: rgba(124,108,255,0.18);
 }
-
 
 .switch-button {
   position: relative;
@@ -241,11 +256,9 @@ main {
   transition: transform 0.2s;
 }
 
-
 .switch-button:hover {
   transform: rotate(180deg);
 }
-
 
 .rate-box {
   display: flex;
@@ -255,15 +268,14 @@ main {
   margin-top: 22px;
 
   color: #9da7c2;
+
   font-size: 14px;
 }
-
 
 .rate-box strong {
   color: white;
   text-align: right;
 }
-
 
 .quote-status {
   min-height: 20px;
@@ -273,9 +285,9 @@ main {
   text-align: center;
 
   color: #7c6cff;
+
   font-size: 13px;
 }
-
 
 .connect-button,
 .swap-button {
@@ -293,17 +305,14 @@ main {
   transition: 0.2s;
 }
 
-
 .connect-button {
   background: white;
   color: #101528;
 }
 
-
 .connect-button:hover {
   transform: translateY(-2px);
 }
-
 
 .swap-button {
   margin-top: 10px;
@@ -312,17 +321,197 @@ main {
   color: white;
 }
 
-
 .swap-button:hover:not(:disabled) {
   transform: translateY(-2px);
 }
-
 
 .swap-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
+
+/* ================= PORTFOLIO ================= */
+
+.portfolio-card {
+  margin-top: 20px;
+}
+
+.portfolio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.portfolio-label {
+  color: #9da7c2;
+  font-size: 13px;
+}
+
+.portfolio-header h2 {
+  margin-top: 5px;
+  font-size: 32px;
+}
+
+.refresh-button {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  background: rgba(255,255,255,0.06);
+
+  color: white;
+
+  font-size: 22px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.refresh-button:hover {
+  background: rgba(124,108,255,0.2);
+  transform: rotate(180deg);
+}
+
+.portfolio-wallet {
+  margin-top: 12px;
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.04);
+
+  color: #8f99b5;
+
+  font-size: 12px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portfolio-list {
+  margin-top: 15px;
+
+  display: grid;
+
+  gap: 8px;
+}
+
+.portfolio-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px;
+
+  border-radius: 15px;
+
+  background: rgba(255,255,255,0.045);
+
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.asset-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.asset-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(124,108,255,0.14);
+
+  font-size: 19px;
+}
+
+.asset-name strong {
+  display: block;
+  font-size: 14px;
+}
+
+.asset-name span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #7e88a4;
+
+  font-size: 11px;
+}
+
+.asset-value {
+  text-align: right;
+}
+
+.asset-value strong {
+  display: block;
+  font-size: 14px;
+}
+
+.asset-value span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #7e88a4;
+
+  font-size: 11px;
+}
+
+.portfolio-empty {
+  padding: 25px 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+
+  color: #9da7c2;
+}
+
+.empty-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 10px;
+
+  border-radius: 50%;
+
+  background: rgba(124,108,255,0.12);
+
+  font-size: 25px;
+}
+
+.portfolio-empty strong {
+  color: white;
+  margin-bottom: 5px;
+}
+
+.portfolio-empty span {
+  font-size: 13px;
+}
+
+
+/* ================= INFO ================= */
 
 .info-section {
   display: grid;
@@ -331,36 +520,37 @@ main {
   margin-top: 20px;
 }
 
-
 .info-section div {
   padding: 20px;
 
   border-radius: 18px;
 
   background: rgba(255,255,255,0.04);
+
   border: 1px solid rgba(255,255,255,0.07);
 }
-
 
 .info-section h3 {
   margin-bottom: 7px;
 }
 
-
 .info-section p {
   color: #8f99b5;
+
   font-size: 14px;
+
   line-height: 1.5;
 }
 
-
 footer {
   text-align: center;
+
   margin-top: 40px;
+
   color: #68718a;
+
   font-size: 13px;
 }
-
 
 @media (max-width: 520px) {
 
@@ -380,7 +570,8 @@ footer {
     letter-spacing: -2px;
   }
 
-  .swap-card {
+  .swap-card,
+  .portfolio-card {
     padding: 16px;
     border-radius: 22px;
   }
@@ -396,5 +587,9 @@ footer {
 
   .rate-box {
     font-size: 12px;
+  }
+
+  .portfolio-header h2 {
+    font-size: 27px;
   }
 }
