@@ -1,15 +1,8 @@
 // ========================================
 // TWINSWAP
-// SOLANA + JUPITER + PORTFOLIO
-// ========================================
-
-
-// ========================================
-// TOKEN DATA
 // ========================================
 
 const TOKENS = {
-
   SOL: {
     symbol: "SOL",
     icon: "◎",
@@ -44,111 +37,83 @@ const TOKENS = {
     mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
     decimals: 5
   }
-
 };
-
-
-// ========================================
-// APIs
-// ========================================
 
 const JUPITER_API =
   "https://lite-api.jup.ag/swap/v1";
 
-const JUPITER_PRICE_API =
-  "https://lite-api.jup.ag/price/v2";
-
 const SOLANA_RPC =
   "https://api.mainnet-beta.solana.com";
-
-
-// ========================================
-// STATE
-// ========================================
 
 let payToken = "USDC";
 let receiveToken = "SOL";
 
 let walletAddress = null;
+let latestQuote = null;
 
 let quoteTimer = null;
 let refreshTimer = null;
-
-let portfolioTimer = null;
-
 let quoteRequestNumber = 0;
-
-let latestQuote = null;
-
 let isSwapping = false;
 
-let web3 = null;
+// ========================================
+// ELEMENT HELPER
+// ========================================
 
+const $ = id =>
+  document.getElementById(id);
 
 // ========================================
 // ELEMENTS
 // ========================================
 
 const payAmount =
-  document.getElementById("payAmount");
+  $("payAmount");
 
 const receiveAmount =
-  document.getElementById("receiveAmount");
+  $("receiveAmount");
 
 const payTokenButton =
-  document.getElementById("payTokenButton");
+  $("payTokenButton");
 
 const receiveTokenButton =
-  document.getElementById("receiveTokenButton");
+  $("receiveTokenButton");
 
 const payTokenMenu =
-  document.getElementById("payTokenMenu");
+  $("payTokenMenu");
 
 const receiveTokenMenu =
-  document.getElementById("receiveTokenMenu");
+  $("receiveTokenMenu");
 
 const payTokenName =
-  document.getElementById("payTokenName");
+  $("payTokenName");
 
 const receiveTokenName =
-  document.getElementById("receiveTokenName");
+  $("receiveTokenName");
 
 const payTokenIcon =
-  document.getElementById("payTokenIcon");
+  $("payTokenIcon");
 
 const receiveTokenIcon =
-  document.getElementById("receiveTokenIcon");
+  $("receiveTokenIcon");
 
 const switchTokens =
-  document.getElementById("switchTokens");
+  $("switchTokens");
 
 const exchangeRate =
-  document.getElementById("exchangeRate");
+  $("exchangeRate");
 
 const quoteStatus =
-  document.getElementById("quoteStatus");
+  $("quoteStatus");
 
 const connectWallet =
-  document.getElementById("connectWallet");
+  $("connectWallet");
 
 const walletStatus =
-  document.getElementById("walletStatus");
+  $("walletStatus");
 
 const swapButton =
-  document.getElementById("swapButton");
-
-const portfolioTotal =
-  document.getElementById("portfolioTotal");
-
-const portfolioWallet =
-  document.getElementById("portfolioWallet");
-
-const portfolioList =
-  document.getElementById("portfolioList");
-
-const refreshPortfolio =
-  document.getElementById("refreshPortfolio");
-
+  $("swapButton");
 
 // ========================================
 // PHANTOM
@@ -157,16 +122,13 @@ const refreshPortfolio =
 function getPhantomProvider() {
 
   if (
-    window.phantom &&
-    window.phantom.solana &&
-    window.phantom.solana.isPhantom
+    window.phantom?.solana?.isPhantom
   ) {
     return window.phantom.solana;
   }
 
   if (
-    window.solana &&
-    window.solana.isPhantom
+    window.solana?.isPhantom
   ) {
     return window.solana;
   }
@@ -174,6 +136,50 @@ function getPhantomProvider() {
   return null;
 }
 
+// ========================================
+// TABS
+// ========================================
+
+document
+  .querySelectorAll(".nav-button")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(".nav-button")
+          .forEach(btn =>
+            btn.classList.remove("active")
+          );
+
+        document
+          .querySelectorAll(".tab-content")
+          .forEach(tab =>
+            tab.classList.remove("active")
+          );
+
+        button.classList.add("active");
+
+        const tab =
+          $(button.dataset.tab);
+
+        if (tab) {
+          tab.classList.add("active");
+        }
+
+        if (
+          button.dataset.tab ===
+          "portfolioTab"
+        ) {
+          loadPortfolio();
+        }
+
+      }
+    );
+
+  });
 
 // ========================================
 // TOKEN DISPLAY
@@ -187,28 +193,18 @@ function updateTokenDisplay() {
   const receive =
     TOKENS[receiveToken];
 
-  if (pay) {
+  payTokenName.textContent =
+    pay.symbol;
 
-    payTokenName.textContent =
-      pay.symbol;
+  payTokenIcon.textContent =
+    pay.icon;
 
-    payTokenIcon.textContent =
-      pay.icon;
+  receiveTokenName.textContent =
+    receive.symbol;
 
-  }
-
-  if (receive) {
-
-    receiveTokenName.textContent =
-      receive.symbol;
-
-    receiveTokenIcon.textContent =
-      receive.icon;
-
-  }
-
+  receiveTokenIcon.textContent =
+    receive.icon;
 }
-
 
 // ========================================
 // MENUS
@@ -216,35 +212,44 @@ function updateTokenDisplay() {
 
 function closeMenus() {
 
-  payTokenMenu.classList.remove("show");
+  payTokenMenu.classList.remove(
+    "show"
+  );
 
-  receiveTokenMenu.classList.remove("show");
-
+  receiveTokenMenu.classList.remove(
+    "show"
+  );
 }
 
 payTokenButton.addEventListener(
   "click",
-  function(event) {
+  event => {
 
     event.stopPropagation();
 
-    receiveTokenMenu.classList.remove("show");
+    receiveTokenMenu.classList.remove(
+      "show"
+    );
 
-    payTokenMenu.classList.toggle("show");
-
+    payTokenMenu.classList.toggle(
+      "show"
+    );
   }
 );
 
 receiveTokenButton.addEventListener(
   "click",
-  function(event) {
+  event => {
 
     event.stopPropagation();
 
-    payTokenMenu.classList.remove("show");
+    payTokenMenu.classList.remove(
+      "show"
+    );
 
-    receiveTokenMenu.classList.toggle("show");
-
+    receiveTokenMenu.classList.toggle(
+      "show"
+    );
   }
 );
 
@@ -253,36 +258,28 @@ document.addEventListener(
   closeMenus
 );
 
-
 // ========================================
 // TOKEN SELECTION
 // ========================================
 
 payTokenMenu
   .querySelectorAll("button")
-  .forEach(function(button) {
+  .forEach(button => {
 
     button.addEventListener(
       "click",
-      function(event) {
+      event => {
 
         event.stopPropagation();
 
         const selected =
           button.dataset.token;
 
-        if (!TOKENS[selected]) {
-          return;
-        }
-
         if (
-          selected ===
-          receiveToken
+          selected === receiveToken
         ) {
-
           receiveToken =
             payToken;
-
         }
 
         payToken =
@@ -294,39 +291,29 @@ payTokenMenu
 
         requestQuote();
 
-        updatePayBalance();
-
       }
     );
 
   });
 
-
 receiveTokenMenu
   .querySelectorAll("button")
-  .forEach(function(button) {
+  .forEach(button => {
 
     button.addEventListener(
       "click",
-      function(event) {
+      event => {
 
         event.stopPropagation();
 
         const selected =
           button.dataset.token;
 
-        if (!TOKENS[selected]) {
-          return;
-        }
-
         if (
-          selected ===
-          payToken
+          selected === payToken
         ) {
-
           payToken =
             receiveToken;
-
         }
 
         receiveToken =
@@ -338,43 +325,37 @@ receiveTokenMenu
 
         requestQuote();
 
-        updatePayBalance();
-
       }
     );
 
   });
 
-
 // ========================================
-// SWITCH
+// SWITCH TOKENS
 // ========================================
 
 switchTokens.addEventListener(
   "click",
-  function() {
+  () => {
 
-    const oldPay =
-      payToken;
-
-    payToken =
-      receiveToken;
-
-    receiveToken =
-      oldPay;
+    [
+      payToken,
+      receiveToken
+    ] =
+    [
+      receiveToken,
+      payToken
+    ];
 
     updateTokenDisplay();
 
     requestQuote();
 
-    updatePayBalance();
-
   }
 );
 
-
 // ========================================
-// NUMBER FORMAT
+// FORMAT
 // ========================================
 
 function formatNumber(value) {
@@ -382,7 +363,9 @@ function formatNumber(value) {
   const number =
     Number(value);
 
-  if (!Number.isFinite(number)) {
+  if (
+    !Number.isFinite(number)
+  ) {
     return "0";
   }
 
@@ -391,7 +374,9 @@ function formatNumber(value) {
   }
 
   if (number < 0.000001) {
+
     return number.toExponential(5);
+
   }
 
   return number.toLocaleString(
@@ -400,13 +385,20 @@ function formatNumber(value) {
       maximumFractionDigits: 8
     }
   );
-
 }
 
+function formatUSD(value) {
 
-// ========================================
-// BASE UNITS
-// ========================================
+  return Number(value || 0)
+    .toLocaleString(
+      "en-US",
+      {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2
+      }
+    );
+}
 
 function toBaseUnits(
   amount,
@@ -430,12 +422,10 @@ function toBaseUnits(
       decimals
     )
   ).toString();
-
 }
 
-
 // ========================================
-// QUOTE
+// QUOTES
 // ========================================
 
 function requestQuote() {
@@ -449,9 +439,7 @@ function requestQuote() {
       runQuote,
       250
     );
-
 }
-
 
 async function runQuote() {
 
@@ -467,16 +455,14 @@ async function runQuote() {
   const output =
     TOKENS[receiveToken];
 
-  latestQuote =
-    null;
+  latestQuote = null;
 
   if (
     !Number.isFinite(amount) ||
     amount <= 0
   ) {
 
-    receiveAmount.value =
-      "";
+    receiveAmount.value = "";
 
     exchangeRate.textContent =
       "Enter an amount";
@@ -491,12 +477,10 @@ async function runQuote() {
       "Enter amount";
 
     return;
-
   }
 
   if (
-    payToken ===
-    receiveToken
+    payToken === receiveToken
   ) {
 
     receiveAmount.value =
@@ -515,7 +499,6 @@ async function runQuote() {
       "Choose different tokens";
 
     return;
-
   }
 
   const rawAmount =
@@ -571,9 +554,7 @@ async function runQuote() {
     );
 
     const response =
-      await fetch(
-        url.toString()
-      );
+      await fetch(url);
 
     const data =
       await response.json();
@@ -595,10 +576,7 @@ async function runQuote() {
 
     }
 
-    if (
-      !data ||
-      !data.outAmount
-    ) {
+    if (!data?.outAmount) {
 
       throw new Error(
         "No swap route found"
@@ -621,7 +599,9 @@ async function runQuote() {
       data;
 
     receiveAmount.value =
-      formatNumber(outputAmount);
+      formatNumber(
+        outputAmount
+      );
 
     exchangeRate.textContent =
       `1 ${input.symbol} ≈ ${formatNumber(rate)} ${output.symbol}`;
@@ -635,9 +615,7 @@ async function runQuote() {
     swapButton.textContent =
       `Swap ${input.symbol} → ${output.symbol}`;
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     if (
       requestId !==
@@ -646,10 +624,7 @@ async function runQuote() {
       return;
     }
 
-    console.error(
-      "Quote error:",
-      error
-    );
+    console.error(error);
 
     receiveAmount.value =
       "—";
@@ -666,508 +641,41 @@ async function runQuote() {
 
     swapButton.textContent =
       "Quote unavailable";
-
   }
-
 }
-
-
-// ========================================
-// AMOUNT INPUT
-// ========================================
 
 payAmount.addEventListener(
   "input",
   requestQuote
 );
 
-
 // ========================================
-// SOLANA RPC
+// AUTO REFRESH QUOTE
 // ========================================
 
-async function rpcRequest(
-  method,
-  params
-) {
+refreshTimer =
+  setInterval(
+    () => {
 
-  const response =
-    await fetch(
-      SOLANA_RPC,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-
-          jsonrpc: "2.0",
-
-          id: Date.now(),
-
-          method,
-
-          params
-
-        })
-
+      if (
+        payAmount.value &&
+        Number(payAmount.value) > 0 &&
+        !isSwapping
+      ) {
+        requestQuote();
       }
-    );
 
-  const data =
-    await response.json();
-
-  if (data.error) {
-
-    throw new Error(
-      data.error.message ||
-      "Solana RPC error"
-    );
-
-  }
-
-  return data.result;
-
-}
-
+    },
+    10000
+  );
 
 // ========================================
-// PORTFOLIO PRICE DATA
-// ========================================
-
-async function getTokenPrices() {
-
-  const ids =
-    Object.values(TOKENS)
-      .map(token => token.mint)
-      .join(",");
-
-  try {
-
-    const response =
-      await fetch(
-        `${JUPITER_PRICE_API}?ids=${ids}`
-      );
-
-    const data =
-      await response.json();
-
-    return data?.data || {};
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Price error:",
-      error
-    );
-
-    return {};
-
-  }
-
-}
-
-
-// ========================================
-// GET WALLET BALANCES
-// ========================================
-
-async function getPortfolioBalances() {
-
-  if (!walletAddress) {
-    return [];
-  }
-
-  const balances = [];
-
-  // ------------------------------------
-  // SOL
-  // ------------------------------------
-
-  const solResult =
-    await rpcRequest(
-      "getBalance",
-      [
-        walletAddress
-      ]
-    );
-
-  const solBalance =
-    solResult.value /
-    1000000000;
-
-  balances.push({
-    symbol: "SOL",
-    icon: "◎",
-    amount: solBalance,
-    mint: TOKENS.SOL.mint
-  });
-
-
-  // ------------------------------------
-  // SPL TOKENS
-  // ------------------------------------
-
-  const tokenResult =
-    await rpcRequest(
-      "getTokenAccountsByOwner",
-      [
-        walletAddress,
-        {
-          programId:
-            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          encoding:
-            "jsonParsed"
-        }
-      ]
-    );
-
-
-  const tokenBalances = {};
-
-  for (
-    const account of
-    tokenResult.value
-  ) {
-
-    const info =
-      account.account.data.parsed.info;
-
-    const mint =
-      info.mint;
-
-    const amount =
-      Number(
-        info.tokenAmount.uiAmount
-      );
-
-    if (
-      amount > 0
-    ) {
-
-      tokenBalances[mint] =
-        (tokenBalances[mint] || 0) +
-        amount;
-
-    }
-
-  }
-
-
-  for (
-    const symbol of
-    ["USDC", "USDT", "JUP", "BONK"]
-  ) {
-
-    const token =
-      TOKENS[symbol];
-
-    balances.push({
-      symbol,
-      icon: token.icon,
-      amount:
-        tokenBalances[token.mint] || 0,
-      mint:
-        token.mint
-    });
-
-  }
-
-  return balances;
-
-}
-
-
-// ========================================
-// RENDER PORTFOLIO
-// ========================================
-
-async function loadPortfolio() {
-
-  if (!walletAddress) {
-
-    portfolioTotal.textContent =
-      "$0.00";
-
-    portfolioWallet.textContent =
-      "Connect Phantom to view your portfolio";
-
-    portfolioList.innerHTML = `
-
-      <div class="portfolio-empty">
-
-        <div class="empty-icon">
-          ◎
-        </div>
-
-        <strong>No wallet connected</strong>
-
-        <span>
-          Connect Phantom to see your assets.
-        </span>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-  portfolioWallet.textContent =
-    `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
-
-  portfolioList.innerHTML = `
-
-    <div class="portfolio-empty">
-
-      <div class="empty-icon">
-        ↻
-      </div>
-
-      <strong>Loading portfolio...</strong>
-
-      <span>
-        Fetching your Solana assets.
-      </span>
-
-    </div>
-
-  `;
-
-  try {
-
-    const [
-      balances,
-      prices
-    ] =
-      await Promise.all([
-        getPortfolioBalances(),
-        getTokenPrices()
-      ]);
-
-    let total =
-      0;
-
-    const assets =
-      balances.map(function(asset) {
-
-        const priceData =
-          prices[asset.mint];
-
-        const price =
-          Number(
-            priceData?.price || 0
-          );
-
-        const value =
-          asset.amount *
-          price;
-
-        total += value;
-
-        return {
-          ...asset,
-          price,
-          value
-        };
-
-      });
-
-
-    portfolioTotal.textContent =
-      `$${total.toLocaleString(
-        undefined,
-        {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }
-      )}`;
-
-
-    portfolioList.innerHTML =
-      "";
-
-
-    assets.forEach(function(asset) {
-
-      const item =
-        document.createElement("div");
-
-      item.className =
-        "portfolio-item";
-
-      item.innerHTML = `
-
-        <div class="asset-left">
-
-          <div class="asset-icon">
-            ${asset.icon}
-          </div>
-
-          <div class="asset-name">
-
-            <strong>
-              ${asset.symbol}
-            </strong>
-
-            <span>
-              ${formatNumber(asset.amount)}
-            </span>
-
-          </div>
-
-        </div>
-
-        <div class="asset-value">
-
-          <strong>
-            $${asset.value.toLocaleString(
-              undefined,
-              {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              }
-            )}
-          </strong>
-
-          <span>
-            $${asset.price.toLocaleString(
-              undefined,
-              {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 8
-              }
-            )}
-          </span>
-
-        </div>
-
-      `;
-
-      portfolioList.appendChild(
-        item
-      );
-
-    });
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Portfolio error:",
-      error
-    );
-
-    portfolioList.innerHTML = `
-
-      <div class="portfolio-empty">
-
-        <div class="empty-icon">
-          !
-        </div>
-
-        <strong>
-          Couldn't load portfolio
-        </strong>
-
-        <span>
-          Try refreshing your wallet.
-        </span>
-
-      </div>
-
-    `;
-
-  }
-
-}
-
-
-// ========================================
-// PAY TOKEN BALANCE
-// ========================================
-
-async function updatePayBalance() {
-
-  if (!walletAddress) {
-
-    document.getElementById(
-      "payBalance"
-    ).textContent =
-      "0.00";
-
-    return;
-
-  }
-
-  try {
-
-    const balances =
-      await getPortfolioBalances();
-
-    const asset =
-      balances.find(
-        item =>
-          item.symbol === payToken
-      );
-
-    document.getElementById(
-      "payBalance"
-    ).textContent =
-      formatNumber(
-        asset?.amount || 0
-      );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Balance error:",
-      error
-    );
-
-  }
-
-}
-
-
-// ========================================
-// REFRESH PORTFOLIO
-// ========================================
-
-refreshPortfolio.addEventListener(
-  "click",
-  async function() {
-
-    if (!walletAddress) {
-      return;
-    }
-
-    await loadPortfolio();
-
-    await updatePayBalance();
-
-  }
-);
-
-
-// ========================================
-// CONNECT PHANTOM
+// CONNECT WALLET
 // ========================================
 
 connectWallet.addEventListener(
   "click",
-  async function() {
+  async () => {
 
     const provider =
       getPhantomProvider();
@@ -1175,11 +683,10 @@ connectWallet.addEventListener(
     if (!provider) {
 
       alert(
-        "Phantom was not detected. Open TwinSwap inside Phantom or install the Phantom extension."
+        "Phantom was not detected. Open TwinSwap inside Phantom or install Phantom."
       );
 
       return;
-
     }
 
     try {
@@ -1190,10 +697,7 @@ connectWallet.addEventListener(
       const response =
         await provider.connect();
 
-      if (
-        !response ||
-        !response.publicKey
-      ) {
+      if (!response?.publicKey) {
 
         throw new Error(
           "Phantom did not return a public key."
@@ -1215,157 +719,570 @@ connectWallet.addEventListener(
       quoteStatus.textContent =
         "Phantom connected";
 
-      // LOAD REAL PORTFOLIO
+      updatePortfolioWallet();
 
-      await loadPortfolio();
-
-      await updatePayBalance();
+      loadPortfolio();
 
       if (
         payAmount.value &&
         Number(payAmount.value) > 0
       ) {
-
         requestQuote();
-
       }
 
-    }
+    } catch (error) {
 
-    catch (error) {
-
-      console.error(
-        "Phantom connection error:",
-        error
-      );
+      console.error(error);
 
       quoteStatus.textContent =
         error.message ||
         "Wallet connection cancelled";
-
     }
 
   }
 );
 
-
 // ========================================
-// DISCONNECT
+// WALLET DISCONNECT
 // ========================================
 
-function handlePhantomDisconnect() {
-
-  walletAddress =
-    null;
-
-  latestQuote =
-    null;
-
-  walletStatus.textContent =
-    "Not connected";
-
-  connectWallet.textContent =
-    "Connect Wallet";
-
-  quoteStatus.textContent =
-    "Wallet disconnected";
-
-  loadPortfolio();
-
-}
-
-const phantom =
+const initialProvider =
   getPhantomProvider();
 
-if (phantom) {
+if (initialProvider) {
 
-  phantom.on(
+  initialProvider.on(
     "disconnect",
-    handlePhantomDisconnect
+    () => {
+
+      walletAddress =
+        null;
+
+      latestQuote =
+        null;
+
+      walletStatus.textContent =
+        "Not connected";
+
+      connectWallet.textContent =
+        "Connect Wallet";
+
+      quoteStatus.textContent =
+        "Wallet disconnected";
+
+      updatePortfolioWallet();
+
+      resetPortfolio();
+
+    }
   );
 
 }
 
-
 // ========================================
-// AUTO REFRESH PORTFOLIO
+// PORTFOLIO
 // ========================================
 
-portfolioTimer =
-  setInterval(
-    function() {
+const PORTFOLIO_MINTS = {
 
-      if (walletAddress) {
+  USDC:
+    TOKENS.USDC.mint,
 
-        loadPortfolio();
+  USDT:
+    TOKENS.USDT.mint,
 
-        updatePayBalance();
+  JUP:
+    TOKENS.JUP.mint,
 
-      }
+  BONK:
+    TOKENS.BONK.mint
 
-    },
-    30000
+};
+
+function updatePortfolioWallet() {
+
+  const element =
+    $("portfolioWallet");
+
+  if (!walletAddress) {
+
+    element.textContent =
+      "Not connected";
+
+    return;
+  }
+
+  element.textContent =
+    walletAddress.slice(0, 6) +
+    "..." +
+    walletAddress.slice(-6);
+}
+
+function resetPortfolio() {
+
+  $("portfolioTotal").textContent =
+    "$0.00";
+
+  $("portfolioAssetCount").textContent =
+    "0";
+
+  $("portfolioStatus").textContent =
+    "Connect Phantom to view your portfolio.";
+
+  setAsset(
+    "SOL",
+    0,
+    0
   );
 
+  setAsset(
+    "USDC",
+    0,
+    0
+  );
+
+  setAsset(
+    "USDT",
+    0,
+    0
+  );
+
+  setAsset(
+    "JUP",
+    0,
+    0
+  );
+
+  setAsset(
+    "BONK",
+    0,
+    0
+  );
+}
 
 // ========================================
-// WEB3.JS
+// SOLANA RPC
 // ========================================
 
-async function loadSolanaWeb3() {
+async function rpc(
+  method,
+  params
+) {
 
-  if (web3) {
-    return web3;
+  const response =
+    await fetch(
+      SOLANA_RPC,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+
+        body: JSON.stringify({
+
+          jsonrpc: "2.0",
+
+          id: 1,
+
+          method,
+
+          params
+
+        })
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (data.error) {
+
+    throw new Error(
+      data.error.message
+    );
+
   }
+
+  return data.result;
+}
+
+// ========================================
+// SOL BALANCE
+// ========================================
+
+async function getSolBalance(
+  address
+) {
+
+  const result =
+    await rpc(
+      "getBalance",
+      [address]
+    );
+
+  return (
+    result.value /
+    1e9
+  );
+}
+
+// ========================================
+// SPL TOKEN BALANCE
+// ========================================
+
+async function getTokenBalance(
+  address,
+  mint
+) {
+
+  const result =
+    await rpc(
+      "getTokenAccountsByOwner",
+      [
+        address,
+
+        {
+          mint
+        },
+
+        {
+          encoding:
+            "jsonParsed"
+        }
+      ]
+    );
+
+  let total = 0;
+
+  for (
+    const account
+    of result.value
+  ) {
+
+    total += Number(
+      account.account.data.parsed
+        .info.tokenAmount.uiAmount ||
+      0
+    );
+
+  }
+
+  return total;
+}
+
+// ========================================
+// TOKEN PRICES
+// ========================================
+
+async function getPrices() {
+
+  const mints = [
+
+    TOKENS.SOL.mint,
+
+    TOKENS.USDC.mint,
+
+    TOKENS.USDT.mint,
+
+    TOKENS.JUP.mint,
+
+    TOKENS.BONK.mint
+
+  ].join(",");
+
+  const response =
+    await fetch(
+      `https://api.jup.ag/price/v3?ids=${mints}`
+    );
+
+  if (!response.ok) {
+
+    throw new Error(
+      "Could not load token prices."
+    );
+
+  }
+
+  const data =
+    await response.json();
+
+  return {
+
+    SOL:
+      Number(
+        data[
+          TOKENS.SOL.mint
+        ]?.usdPrice || 0
+      ),
+
+    USDC:
+      Number(
+        data[
+          TOKENS.USDC.mint
+        ]?.usdPrice || 0
+      ),
+
+    USDT:
+      Number(
+        data[
+          TOKENS.USDT.mint
+        ]?.usdPrice || 0
+      ),
+
+    JUP:
+      Number(
+        data[
+          TOKENS.JUP.mint
+        ]?.usdPrice || 0
+      ),
+
+    BONK:
+      Number(
+        data[
+          TOKENS.BONK.mint
+        ]?.usdPrice || 0
+      )
+
+  };
+}
+
+// ========================================
+// UPDATE ASSET
+// ========================================
+
+function setAsset(
+  symbol,
+  balance,
+  value
+) {
+
+  const balanceElement =
+    $(
+      `${symbol.toLowerCase()}Balance`
+    );
+
+  const valueElement =
+    $(
+      `${symbol.toLowerCase()}Value`
+    );
+
+  if (balanceElement) {
+
+    balanceElement.textContent =
+      formatNumber(balance);
+
+  }
+
+  if (valueElement) {
+
+    valueElement.textContent =
+      formatUSD(value);
+
+  }
+}
+
+// ========================================
+// LOAD PORTFOLIO
+// ========================================
+
+async function loadPortfolio() {
+
+  updatePortfolioWallet();
+
+  if (!walletAddress) {
+
+    resetPortfolio();
+
+    return;
+  }
+
+  $("portfolioStatus").textContent =
+    "Loading wallet assets...";
 
   try {
 
-    const module =
-      await import(
-        "https://esm.sh/@solana/web3.js@1.98.4"
-      );
+    const results =
+      await Promise.all([
 
-    web3 =
-      module;
+        getSolBalance(
+          walletAddress
+        ),
 
-    return web3;
+        getTokenBalance(
+          walletAddress,
+          PORTFOLIO_MINTS.USDC
+        ),
 
-  }
+        getTokenBalance(
+          walletAddress,
+          PORTFOLIO_MINTS.USDT
+        ),
 
-  catch (error) {
+        getTokenBalance(
+          walletAddress,
+          PORTFOLIO_MINTS.JUP
+        ),
+
+        getTokenBalance(
+          walletAddress,
+          PORTFOLIO_MINTS.BONK
+        ),
+
+        getPrices()
+
+      ]);
+
+    const sol =
+      results[0];
+
+    const usdc =
+      results[1];
+
+    const usdt =
+      results[2];
+
+    const jup =
+      results[3];
+
+    const bonk =
+      results[4];
+
+    const prices =
+      results[5];
+
+    const solValue =
+      sol * prices.SOL;
+
+    const usdcValue =
+      usdc * prices.USDC;
+
+    const usdtValue =
+      usdt * prices.USDT;
+
+    const jupValue =
+      jup * prices.JUP;
+
+    const bonkValue =
+      bonk * prices.BONK;
+
+    const total =
+      solValue +
+      usdcValue +
+      usdtValue +
+      jupValue +
+      bonkValue;
+
+    setAsset(
+      "SOL",
+      sol,
+      solValue
+    );
+
+    setAsset(
+      "USDC",
+      usdc,
+      usdcValue
+    );
+
+    setAsset(
+      "USDT",
+      usdt,
+      usdtValue
+    );
+
+    setAsset(
+      "JUP",
+      jup,
+      jupValue
+    );
+
+    setAsset(
+      "BONK",
+      bonk,
+      bonkValue
+    );
+
+    let assetCount = 0;
+
+    if (sol > 0) assetCount++;
+    if (usdc > 0) assetCount++;
+    if (usdt > 0) assetCount++;
+    if (jup > 0) assetCount++;
+    if (bonk > 0) assetCount++;
+
+    $("portfolioAssetCount")
+      .textContent =
+      assetCount;
+
+    $("portfolioTotal")
+      .textContent =
+      formatUSD(total);
+
+    $("portfolioStatus")
+      .textContent =
+      "Updated just now.";
+
+  } catch (error) {
 
     console.error(
-      "web3.js loading error:",
+      "Portfolio error:",
       error
     );
 
-    throw new Error(
-      "Solana transaction engine failed to load."
-    );
+    $("portfolioStatus")
+      .textContent =
+      "Could not load portfolio. Tap refresh and try again.";
 
   }
-
 }
 
+// ========================================
+// REFRESH PORTFOLIO
+// ========================================
+
+$("refreshPortfolio")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const button =
+        $("refreshPortfolio");
+
+      button.style.transform =
+        "rotate(360deg)";
+
+      await loadPortfolio();
+
+      setTimeout(
+        () => {
+          button.style.transform =
+            "";
+        },
+        300
+      );
+
+    }
+  );
 
 // ========================================
-// BUILD SWAP
+// SWAP TRANSACTION
 // ========================================
+
+async function loadWeb3() {
+
+  return await import(
+    "https://esm.sh/@solana/web3.js@1.98.4"
+  );
+}
 
 async function buildSwapTransaction() {
 
   if (!latestQuote) {
 
     throw new Error(
-      "No valid Jupiter quote available."
-    );
-
-  }
-
-  if (!walletAddress) {
-
-    throw new Error(
-      "Wallet is not connected."
+      "No valid quote available."
     );
 
   }
@@ -1378,9 +1295,6 @@ async function buildSwapTransaction() {
 
         headers: {
           "Content-Type":
-            "application/json",
-
-          "Accept":
             "application/json"
         },
 
@@ -1410,7 +1324,6 @@ async function buildSwapTransaction() {
           }
 
         })
-
       }
     );
 
@@ -1422,7 +1335,7 @@ async function buildSwapTransaction() {
     throw new Error(
       data?.error ||
       data?.message ||
-      `Swap build failed (${response.status})`
+      "Swap build failed."
     );
 
   }
@@ -1430,21 +1343,15 @@ async function buildSwapTransaction() {
   if (!data.swapTransaction) {
 
     throw new Error(
-      "Jupiter did not return a swap transaction."
+      "No transaction returned by Jupiter."
     );
 
   }
 
-  return data;
-
+  return data.swapTransaction;
 }
 
-
-// ========================================
-// BASE64
-// ========================================
-
-function base64ToUint8Array(
+function base64ToBytes(
   base64
 ) {
 
@@ -1468,239 +1375,7 @@ function base64ToUint8Array(
   }
 
   return bytes;
-
 }
-
-
-// ========================================
-// DESERIALIZE
-// ========================================
-
-async function deserializeJupiterTransaction(
-  base64Transaction
-) {
-
-  const solana =
-    await loadSolanaWeb3();
-
-  const transactionBytes =
-    base64ToUint8Array(
-      base64Transaction
-    );
-
-  return solana.VersionedTransaction.deserialize(
-    transactionBytes
-  );
-
-}
-
-
-// ========================================
-// SEND TRANSACTION
-// ========================================
-
-async function sendSignedTransaction(
-  signedTransaction
-) {
-
-  const rawTransaction =
-    signedTransaction.serialize();
-
-  let binary = "";
-
-  const chunkSize =
-    0x8000;
-
-  for (
-    let i = 0;
-    i < rawTransaction.length;
-    i += chunkSize
-  ) {
-
-    binary += String.fromCharCode(
-      ...rawTransaction.subarray(
-        i,
-        Math.min(
-          i + chunkSize,
-          rawTransaction.length
-        )
-      )
-    );
-
-  }
-
-  const base64Transaction =
-    btoa(binary);
-
-  const response =
-    await fetch(
-      SOLANA_RPC,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-
-          jsonrpc: "2.0",
-
-          id: 1,
-
-          method:
-            "sendTransaction",
-
-          params: [
-            base64Transaction,
-            {
-              encoding:
-                "base64",
-
-              skipPreflight:
-                false,
-
-              preflightCommitment:
-                "confirmed",
-
-              maxRetries:
-                3
-            }
-          ]
-
-        })
-
-      }
-    );
-
-  const data =
-    await response.json();
-
-  if (data?.error) {
-
-    throw new Error(
-      data.error.message ||
-      "Solana rejected the transaction."
-    );
-
-  }
-
-  if (!data?.result) {
-
-    throw new Error(
-      "Solana did not return a transaction signature."
-    );
-
-  }
-
-  return data.result;
-
-}
-
-
-// ========================================
-// CONFIRM
-// ========================================
-
-async function confirmTransaction(
-  signature
-) {
-
-  const start =
-    Date.now();
-
-  while (
-    Date.now() - start <
-    60000
-  ) {
-
-    const data =
-      await rpcRequest(
-        "getSignatureStatuses",
-        [
-          [signature],
-          {
-            searchTransactionHistory:
-              true
-          }
-        ]
-      );
-
-    const status =
-      data?.value?.[0];
-
-    if (status) {
-
-      if (status.err) {
-
-        throw new Error(
-          "Solana rejected the transaction."
-        );
-
-      }
-
-      if (
-        status.confirmationStatus ===
-          "confirmed" ||
-        status.confirmationStatus ===
-          "finalized"
-      ) {
-
-        return true;
-
-      }
-
-    }
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          1500
-        )
-    );
-
-  }
-
-  return false;
-
-}
-
-
-// ========================================
-// SUCCESS
-// ========================================
-
-function showTransactionResult(
-  signature
-) {
-
-  const shortSignature =
-    signature.slice(0, 6) +
-    "..." +
-    signature.slice(-6);
-
-  const open =
-    confirm(
-      `Swap successful!\n\nTransaction:\n${shortSignature}\n\nOpen Solscan?`
-    );
-
-  if (open) {
-
-    window.open(
-      `https://solscan.io/tx/${signature}`,
-      "_blank"
-    );
-
-  }
-
-}
-
-
-// ========================================
-// EXECUTE SWAP
-// ========================================
 
 async function executeSwap() {
 
@@ -1718,7 +1393,6 @@ async function executeSwap() {
     );
 
     return;
-
   }
 
   if (!walletAddress) {
@@ -1728,7 +1402,6 @@ async function executeSwap() {
     );
 
     return;
-
   }
 
   if (!latestQuote) {
@@ -1736,7 +1409,6 @@ async function executeSwap() {
     requestQuote();
 
     return;
-
   }
 
   isSwapping =
@@ -1750,23 +1422,27 @@ async function executeSwap() {
 
   try {
 
-    await loadSolanaWeb3();
+    const web3 =
+      await loadWeb3();
 
     quoteStatus.textContent =
       "Building transaction...";
 
-    const swapData =
+    const transactionBase64 =
       await buildSwapTransaction();
+
+    const transaction =
+      web3.VersionedTransaction
+        .deserialize(
+          base64ToBytes(
+            transactionBase64
+          )
+        );
 
     quoteStatus.textContent =
       "Confirm the transaction in Phantom...";
 
-    const transaction =
-      await deserializeJupiterTransaction(
-        swapData.swapTransaction
-      );
-
-    const signedTransaction =
+    const signed =
       await provider.signTransaction(
         transaction
       );
@@ -1774,35 +1450,87 @@ async function executeSwap() {
     quoteStatus.textContent =
       "Sending transaction...";
 
-    swapButton.textContent =
-      "Sending...";
+    const raw =
+      signed.serialize();
 
-    const signature =
-      await sendSignedTransaction(
-        signedTransaction
+    let binary = "";
+
+    for (
+      let i = 0;
+      i < raw.length;
+      i += 0x8000
+    ) {
+
+      binary +=
+        String.fromCharCode(
+          ...raw.subarray(
+            i,
+            Math.min(
+              i + 0x8000,
+              raw.length
+            )
+          )
+        );
+
+    }
+
+    const response =
+      await fetch(
+        SOLANA_RPC,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+
+            jsonrpc: "2.0",
+
+            id: 1,
+
+            method:
+              "sendTransaction",
+
+            params: [
+
+              btoa(binary),
+
+              {
+                encoding:
+                  "base64",
+
+                skipPreflight:
+                  false,
+
+                preflightCommitment:
+                  "confirmed"
+              }
+
+            ]
+
+          })
+        }
       );
 
-    quoteStatus.textContent =
-      "Confirming transaction...";
+    const result =
+      await response.json();
 
-    swapButton.textContent =
-      "Confirming...";
-
-    const confirmed =
-      await confirmTransaction(
-        signature
-      );
-
-    if (!confirmed) {
+    if (result.error) {
 
       throw new Error(
-        "Transaction confirmation timed out."
+        result.error.message
       );
 
     }
 
+    const signature =
+      result.result;
+
     quoteStatus.textContent =
-      "Swap successful ✓";
+      "Swap sent ✓";
 
     swapButton.textContent =
       "Swap successful ✓";
@@ -1810,58 +1538,23 @@ async function executeSwap() {
     latestQuote =
       null;
 
-    await loadPortfolio();
-
-    await updatePayBalance();
-
-    showTransactionResult(
-      signature
+    setTimeout(
+      loadPortfolio,
+      3000
     );
 
-  }
-
-  catch (error) {
-
-    console.error(
-      "TwinSwap execution error:",
-      error
+    window.open(
+      `https://solscan.io/tx/${signature}`,
+      "_blank"
     );
 
-    const message =
-      error?.message ||
-      String(error);
+  } catch (error) {
 
-    const lower =
-      message.toLowerCase();
+    console.error(error);
 
-    if (
-      error?.code === 4001 ||
-      lower.includes("rejected") ||
-      lower.includes("cancelled") ||
-      lower.includes("canceled")
-    ) {
-
-      quoteStatus.textContent =
-        "Transaction cancelled in Phantom.";
-
-    }
-
-    else if (
-      lower.includes("insufficient") ||
-      lower.includes("funds")
-    ) {
-
-      quoteStatus.textContent =
-        "Insufficient balance for this swap.";
-
-    }
-
-    else {
-
-      quoteStatus.textContent =
-        message;
-
-    }
+    quoteStatus.textContent =
+      error.message ||
+      "Swap failed.";
 
     swapButton.disabled =
       false;
@@ -1869,27 +1562,18 @@ async function executeSwap() {
     swapButton.textContent =
       `Swap ${payToken} → ${receiveToken}`;
 
-  }
-
-  finally {
+  } finally {
 
     isSwapping =
       false;
 
   }
-
 }
-
-
-// ========================================
-// SWAP BUTTON
-// ========================================
 
 swapButton.addEventListener(
   "click",
   executeSwap
 );
-
 
 // ========================================
 // INITIALIZE
@@ -1897,7 +1581,9 @@ swapButton.addEventListener(
 
 updateTokenDisplay();
 
-loadPortfolio();
+updatePortfolioWallet();
+
+resetPortfolio();
 
 console.log(
   "TwinSwap loaded successfully."
