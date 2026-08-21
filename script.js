@@ -1,6 +1,6 @@
 // ========================================
 // TWINSWAP
-// LIVE SOLANA JUPITER SWAP
+// SOLANA + JUPITER SWAP ENGINE
 // ========================================
 
 
@@ -148,10 +148,10 @@ async function loadSolanaWeb3() {
     return web3;
   }
 
-  quoteStatus.textContent =
-    "Loading Solana transaction engine...";
-
   try {
+
+    quoteStatus.textContent =
+      "Loading transaction engine...";
 
     const module =
       await import(
@@ -161,7 +161,8 @@ async function loadSolanaWeb3() {
     web3 = module;
 
     console.log(
-      "Solana web3.js loaded successfully."
+      "Solana web3.js loaded:",
+      web3
     );
 
     return web3;
@@ -171,16 +172,50 @@ async function loadSolanaWeb3() {
   catch (error) {
 
     console.error(
-      "Could not load Solana web3.js:",
+      "web3.js loading error:",
       error
     );
 
     quoteStatus.textContent =
       "Could not load Solana transaction engine.";
 
-    throw error;
+    throw new Error(
+      "Solana transaction engine failed to load."
+    );
 
   }
+
+}
+
+
+// ========================================
+// PHANTOM PROVIDER
+// ========================================
+
+function getPhantomProvider() {
+
+  // Newer Phantom injection
+  if (
+    window.phantom &&
+    window.phantom.solana &&
+    window.phantom.solana.isPhantom
+  ) {
+
+    return window.phantom.solana;
+
+  }
+
+  // Older/common injection
+  if (
+    window.solana &&
+    window.solana.isPhantom
+  ) {
+
+    return window.solana;
+
+  }
+
+  return null;
 
 }
 
@@ -448,7 +483,7 @@ function formatNumber(value) {
 
 
 // ========================================
-// BASE UNITS
+// BASE UNIT CONVERSION
 // ========================================
 
 function toBaseUnits(
@@ -626,18 +661,15 @@ async function runQuote() {
       input.mint
     );
 
-
     url.searchParams.set(
       "outputMint",
       output.mint
     );
 
-
     url.searchParams.set(
       "amount",
       rawAmount
     );
-
 
     url.searchParams.set(
       "slippageBps",
@@ -740,7 +772,6 @@ async function runQuote() {
     swapButton.disabled =
       false;
 
-
     swapButton.textContent =
       `Swap ${input.symbol} → ${output.symbol}`;
 
@@ -780,7 +811,6 @@ async function runQuote() {
 
     swapButton.disabled =
       true;
-
 
     swapButton.textContent =
       "Quote unavailable";
@@ -836,27 +866,6 @@ startQuoteRefresh();
 
 
 // ========================================
-// PHANTOM PROVIDER
-// ========================================
-
-function getPhantomProvider() {
-
-  if (
-    window.solana &&
-    window.solana.isPhantom
-  ) {
-
-    return window.solana;
-
-  }
-
-
-  return null;
-
-}
-
-
-// ========================================
 // CONNECT PHANTOM
 // ========================================
 
@@ -871,7 +880,7 @@ connectWallet.addEventListener(
     if (!provider) {
 
       alert(
-        "Phantom was not detected. Open TwinSwap inside Phantom or install the Phantom browser extension."
+        "Phantom was not detected. Open TwinSwap inside Phantom or install the Phantom extension."
       );
 
       return;
@@ -881,8 +890,24 @@ connectWallet.addEventListener(
 
     try {
 
+      quoteStatus.textContent =
+        "Connecting Phantom...";
+
+
       const response =
         await provider.connect();
+
+
+      if (
+        !response ||
+        !response.publicKey
+      ) {
+
+        throw new Error(
+          "Phantom did not return a public key."
+        );
+
+      }
 
 
       walletAddress =
@@ -924,6 +949,7 @@ connectWallet.addEventListener(
 
 
       quoteStatus.textContent =
+        error.message ||
         "Wallet connection cancelled";
 
     }
@@ -936,25 +962,35 @@ connectWallet.addEventListener(
 // PHANTOM DISCONNECT
 // ========================================
 
-if (window.solana) {
+function handlePhantomDisconnect() {
 
-  window.solana.on(
+  walletAddress =
+    null;
+
+  latestQuote =
+    null;
+
+  walletStatus.textContent =
+    "Not connected";
+
+  connectWallet.textContent =
+    "Connect Wallet";
+
+  quoteStatus.textContent =
+    "Wallet disconnected";
+
+}
+
+
+const phantom =
+  getPhantomProvider();
+
+
+if (phantom) {
+
+  phantom.on(
     "disconnect",
-    function() {
-
-      walletAddress =
-        null;
-
-      latestQuote =
-        null;
-
-      walletStatus.textContent =
-        "Not connected";
-
-      connectWallet.textContent =
-        "Connect Wallet";
-
-    }
+    handlePhantomDisconnect
   );
 
 }
@@ -1038,7 +1074,7 @@ async function buildSwapTransaction() {
 
 
   console.log(
-    "Jupiter transaction response:",
+    "Jupiter swap response:",
     data
   );
 
@@ -1123,13 +1159,199 @@ async function deserializeJupiterTransaction(
     );
 
 
+  if (
+    !(transactionBytes instanceof Uint8Array)
+  ) {
+
+    throw new Error(
+      "Invalid Jupiter transaction bytes."
+    );
+
+  }
+
+
   const transaction =
     solana.VersionedTransaction.deserialize(
       transactionBytes
     );
 
 
+  // IMPORTANT:
+  // Phantom must receive the REAL
+  // VersionedTransaction object.
+  // Never pass transactionBytes here.
+
+  if (
+    !transaction ||
+    typeof transaction.serialize !== "function"
+  ) {
+
+    throw new Error(
+      "Failed to create a valid Solana VersionedTransaction."
+    );
+
+  }
+
+
+  console.log(
+    "VersionedTransaction ready:",
+    transaction
+  );
+
+  console.log(
+    "serialize():",
+    typeof transaction.serialize
+  );
+
+
   return transaction;
+
+}
+
+
+// ========================================
+// SEND SIGNED TRANSACTION TO SOLANA
+// ========================================
+
+async function sendSignedTransaction(
+  signedTransaction
+) {
+
+  if (
+    !signedTransaction ||
+    typeof signedTransaction.serialize !==
+      "function"
+  ) {
+
+    throw new Error(
+      "Phantom returned an invalid signed transaction."
+    );
+
+  }
+
+
+  const rawTransaction =
+    signedTransaction.serialize();
+
+
+  if (
+    !(rawTransaction instanceof Uint8Array)
+  ) {
+
+    throw new Error(
+      "Could not serialize signed transaction."
+    );
+
+  }
+
+
+  // Convert bytes to base64 for Solana RPC.
+
+  let binary = "";
+
+  const chunkSize = 0x8000;
+
+
+  for (
+    let i = 0;
+    i < rawTransaction.length;
+    i += chunkSize
+  ) {
+
+    binary += String.fromCharCode(
+      ...rawTransaction.subarray(
+        i,
+        Math.min(
+          i + chunkSize,
+          rawTransaction.length
+        )
+      )
+    );
+
+  }
+
+
+  const base64Transaction =
+    btoa(binary);
+
+
+  const response =
+    await fetch(
+      SOLANA_RPC,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+
+        body: JSON.stringify({
+
+          jsonrpc: "2.0",
+
+          id: 1,
+
+          method:
+            "sendTransaction",
+
+          params: [
+            base64Transaction,
+            {
+              encoding:
+                "base64",
+
+              skipPreflight:
+                false,
+
+              preflightCommitment:
+                "confirmed",
+
+              maxRetries:
+                3
+            }
+          ]
+
+        })
+
+      }
+    );
+
+
+  const data =
+    await response.json();
+
+
+  console.log(
+    "Solana sendTransaction response:",
+    data
+  );
+
+
+  if (
+    data?.error
+  ) {
+
+    throw new Error(
+      data.error.message ||
+      "Solana rejected the transaction."
+    );
+
+  }
+
+
+  if (
+    !data?.result
+  ) {
+
+    throw new Error(
+      "Solana did not return a transaction signature."
+    );
+
+  }
+
+
+  return data.result;
 
 }
 
@@ -1139,8 +1361,7 @@ async function deserializeJupiterTransaction(
 // ========================================
 
 async function confirmTransaction(
-  signature,
-  lastValidBlockHeight
+  signature
 ) {
 
   const start =
@@ -1152,90 +1373,79 @@ async function confirmTransaction(
     60000
   ) {
 
-    try {
+    const response =
+      await fetch(
+        SOLANA_RPC,
+        {
+          method: "POST",
 
-      const response =
-        await fetch(
-          SOLANA_RPC,
-          {
-            method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
+          body: JSON.stringify({
 
-            body: JSON.stringify({
+            jsonrpc: "2.0",
 
-              jsonrpc: "2.0",
+            id: 1,
 
-              id: 1,
+            method:
+              "getSignatureStatuses",
 
-              method:
-                "getSignatureStatuses",
+            params: [
+              [signature],
+              {
+                searchTransactionHistory:
+                  true
+              }
+            ]
 
-              params: [
-                [signature],
-                {
-                  searchTransactionHistory:
-                    true
-                }
-              ]
-
-            })
-
-          }
-        );
-
-
-      const data =
-        await response.json();
-
-
-      const status =
-        data?.result?.value?.[0];
-
-
-      if (status) {
-
-        if (status.err) {
-
-          throw new Error(
-            "Solana rejected the transaction."
-          );
+          })
 
         }
+      );
 
 
-        if (
-          status.confirmationStatus ===
-            "confirmed" ||
-          status.confirmationStatus ===
-            "finalized"
-        ) {
+    const data =
+      await response.json();
 
-          return true;
 
-        }
+    if (
+      data?.error
+    ) {
 
-      }
+      console.warn(
+        "Status RPC error:",
+        data.error
+      );
 
     }
 
 
-    catch (error) {
+    const status =
+      data?.result?.value?.[0];
 
-      console.error(
-        "Confirmation check:",
-        error
-      );
+
+    if (status) {
+
+      if (status.err) {
+
+        throw new Error(
+          "Solana rejected the transaction."
+        );
+
+      }
+
 
       if (
-        error.message ===
-        "Solana rejected the transaction."
+        status.confirmationStatus ===
+          "confirmed" ||
+        status.confirmationStatus ===
+          "finalized"
       ) {
 
-        throw error;
+        return true;
 
       }
 
@@ -1358,27 +1568,30 @@ async function executeSwap() {
   try {
 
     // ------------------------------------
-    // LOAD SOLANA WEB3
+    // LOAD TRANSACTION LIBRARY
     // ------------------------------------
 
     await loadSolanaWeb3();
 
 
     // ------------------------------------
-    // BUILD TRANSACTION
+    // BUILD JUPITER TRANSACTION
     // ------------------------------------
+
+    quoteStatus.textContent =
+      "Building transaction...";
+
 
     const swapData =
       await buildSwapTransaction();
 
 
     // ------------------------------------
-    // CONVERT BASE64 TRANSACTION
-    // INTO REAL VERSIONED TRANSACTION
+    // DESERIALIZE
     // ------------------------------------
 
     quoteStatus.textContent =
-      "Transaction ready. Confirm in Phantom...";
+      "Preparing Phantom confirmation...";
 
 
     const transaction =
@@ -1387,44 +1600,102 @@ async function executeSwap() {
       );
 
 
-    console.log(
-      "Deserialized transaction:",
-      transaction
-    );
-
-
     // ------------------------------------
-    // SEND TO PHANTOM
+    // IMPORTANT VALIDATION
     // ------------------------------------
 
-    const result =
-      await provider.signAndSendTransaction(
-        transaction
-      );
-
-
-    console.log(
-      "Phantom transaction result:",
-      result
-    );
-
-
-    const signature =
-      result?.signature ||
-      result;
-
-
-    if (!signature) {
+    if (
+      typeof transaction.serialize !==
+      "function"
+    ) {
 
       throw new Error(
-        "Phantom did not return a transaction signature."
+        "Transaction serialization failed before Phantom."
       );
 
     }
 
 
+    console.log(
+      "Sending VersionedTransaction to Phantom."
+    );
+
+
     // ------------------------------------
-    // TRANSACTION SENT
+    // ASK PHANTOM TO SIGN
+    // ------------------------------------
+
+    quoteStatus.textContent =
+      "Confirm the transaction in Phantom...";
+
+
+    /*
+      IMPORTANT:
+
+      We intentionally use signTransaction()
+      instead of signAndSendTransaction().
+
+      Phantom receives the actual
+      VersionedTransaction object.
+
+      We then serialize the signed transaction
+      ourselves and submit it to Solana RPC.
+    */
+
+    const signedTransaction =
+      await provider.signTransaction(
+        transaction
+      );
+
+
+    // ------------------------------------
+    // VALIDATE PHANTOM RESPONSE
+    // ------------------------------------
+
+    if (
+      !signedTransaction ||
+      typeof signedTransaction.serialize !==
+        "function"
+    ) {
+
+      throw new Error(
+        "Phantom did not return a valid signed transaction."
+      );
+
+    }
+
+
+    console.log(
+      "Phantom signing successful."
+    );
+
+
+    // ------------------------------------
+    // BROADCAST
+    // ------------------------------------
+
+    quoteStatus.textContent =
+      "Sending transaction to Solana...";
+
+
+    swapButton.textContent =
+      "Sending...";
+
+
+    const signature =
+      await sendSignedTransaction(
+        signedTransaction
+      );
+
+
+    console.log(
+      "Transaction signature:",
+      signature
+    );
+
+
+    // ------------------------------------
+    // CONFIRM
     // ------------------------------------
 
     quoteStatus.textContent =
@@ -1435,14 +1706,9 @@ async function executeSwap() {
       "Confirming...";
 
 
-    // ------------------------------------
-    // CONFIRM ON SOLANA
-    // ------------------------------------
-
     const confirmed =
       await confirmTransaction(
-        signature,
-        swapData.lastValidBlockHeight
+        signature
       );
 
 
@@ -1490,16 +1756,25 @@ async function executeSwap() {
     );
 
 
-    // Phantom rejection
+    const message =
+      error?.message ||
+      String(error);
+
+
+    const lowerMessage =
+      message.toLowerCase();
+
+
+    // ------------------------------------
+    // USER CANCELLED
+    // ------------------------------------
 
     if (
       error?.code === 4001 ||
-      error?.message?.toLowerCase().includes(
-        "rejected"
-      ) ||
-      error?.message?.toLowerCase().includes(
-        "user rejected"
-      )
+      lowerMessage.includes("rejected") ||
+      lowerMessage.includes("user rejected") ||
+      lowerMessage.includes("cancelled") ||
+      lowerMessage.includes("canceled")
     ) {
 
       quoteStatus.textContent =
@@ -1508,12 +1783,13 @@ async function executeSwap() {
     }
 
 
-    // Insufficient balance
+    // ------------------------------------
+    // INSUFFICIENT FUNDS
+    // ------------------------------------
 
     else if (
-      error?.message?.toLowerCase().includes(
-        "insufficient"
-      )
+      lowerMessage.includes("insufficient") ||
+      lowerMessage.includes("funds")
     ) {
 
       quoteStatus.textContent =
@@ -1522,11 +1798,32 @@ async function executeSwap() {
     }
 
 
+    // ------------------------------------
+    // BLOCKHASH / EXPIRED
+    // ------------------------------------
+
+    else if (
+      lowerMessage.includes("blockhash") ||
+      lowerMessage.includes("expired")
+    ) {
+
+      quoteStatus.textContent =
+        "Transaction expired. Please try the swap again.";
+
+      latestQuote =
+        null;
+
+    }
+
+
+    // ------------------------------------
+    // OTHER ERROR
+    // ------------------------------------
+
     else {
 
       quoteStatus.textContent =
-        error.message ||
-        "Transaction failed.";
+        message;
 
     }
 
