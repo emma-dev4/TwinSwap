@@ -4,9 +4,9 @@
 // ========================================
 
 
-// ----------------------------------------
+// ========================================
 // TOKEN DATA
-// ----------------------------------------
+// ========================================
 
 const TOKENS = {
 
@@ -48,25 +48,25 @@ const TOKENS = {
 };
 
 
-// ----------------------------------------
+// ========================================
 // JUPITER API
-// ----------------------------------------
+// ========================================
 
 const JUPITER_API =
   "https://lite-api.jup.ag/swap/v1";
 
 
-// ----------------------------------------
+// ========================================
 // SOLANA RPC
-// ----------------------------------------
+// ========================================
 
 const SOLANA_RPC =
   "https://api.mainnet-beta.solana.com";
 
 
-// ----------------------------------------
+// ========================================
 // STATE
-// ----------------------------------------
+// ========================================
 
 let payToken = "USDC";
 let receiveToken = "SOL";
@@ -82,10 +82,12 @@ let latestQuote = null;
 
 let isSwapping = false;
 
+let web3 = null;
 
-// ----------------------------------------
+
+// ========================================
 // ELEMENTS
-// ----------------------------------------
+// ========================================
 
 const payAmount =
   document.getElementById("payAmount");
@@ -136,9 +138,56 @@ const swapButton =
   document.getElementById("swapButton");
 
 
-// ----------------------------------------
+// ========================================
+// LOAD SOLANA WEB3.JS
+// ========================================
+
+async function loadSolanaWeb3() {
+
+  if (web3) {
+    return web3;
+  }
+
+  quoteStatus.textContent =
+    "Loading Solana transaction engine...";
+
+  try {
+
+    const module =
+      await import(
+        "https://esm.sh/@solana/web3.js@1.98.4"
+      );
+
+    web3 = module;
+
+    console.log(
+      "Solana web3.js loaded successfully."
+    );
+
+    return web3;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Could not load Solana web3.js:",
+      error
+    );
+
+    quoteStatus.textContent =
+      "Could not load Solana transaction engine.";
+
+    throw error;
+
+  }
+
+}
+
+
+// ========================================
 // TOKEN DISPLAY
-// ----------------------------------------
+// ========================================
 
 function updateTokenDisplay() {
 
@@ -173,9 +222,9 @@ function updateTokenDisplay() {
 }
 
 
-// ----------------------------------------
+// ========================================
 // CLOSE MENUS
-// ----------------------------------------
+// ========================================
 
 function closeMenus() {
 
@@ -186,9 +235,9 @@ function closeMenus() {
 }
 
 
-// ----------------------------------------
+// ========================================
 // PAY TOKEN MENU
-// ----------------------------------------
+// ========================================
 
 payTokenButton.addEventListener(
   "click",
@@ -196,21 +245,17 @@ payTokenButton.addEventListener(
 
     event.stopPropagation();
 
-    receiveTokenMenu.classList.remove(
-      "show"
-    );
+    receiveTokenMenu.classList.remove("show");
 
-    payTokenMenu.classList.toggle(
-      "show"
-    );
+    payTokenMenu.classList.toggle("show");
 
   }
 );
 
 
-// ----------------------------------------
+// ========================================
 // RECEIVE TOKEN MENU
-// ----------------------------------------
+// ========================================
 
 receiveTokenButton.addEventListener(
   "click",
@@ -218,21 +263,17 @@ receiveTokenButton.addEventListener(
 
     event.stopPropagation();
 
-    payTokenMenu.classList.remove(
-      "show"
-    );
+    payTokenMenu.classList.remove("show");
 
-    receiveTokenMenu.classList.toggle(
-      "show"
-    );
+    receiveTokenMenu.classList.toggle("show");
 
   }
 );
 
 
-// ----------------------------------------
+// ========================================
 // CLOSE MENUS OUTSIDE
-// ----------------------------------------
+// ========================================
 
 document.addEventListener(
   "click",
@@ -240,9 +281,9 @@ document.addEventListener(
 );
 
 
-// ----------------------------------------
+// ========================================
 // PAY TOKEN SELECTION
-// ----------------------------------------
+// ========================================
 
 payTokenMenu
   .querySelectorAll("button")
@@ -291,9 +332,9 @@ payTokenMenu
   });
 
 
-// ----------------------------------------
+// ========================================
 // RECEIVE TOKEN SELECTION
-// ----------------------------------------
+// ========================================
 
 receiveTokenMenu
   .querySelectorAll("button")
@@ -342,9 +383,9 @@ receiveTokenMenu
   });
 
 
-// ----------------------------------------
+// ========================================
 // SWITCH TOKENS
-// ----------------------------------------
+// ========================================
 
 switchTokens.addEventListener(
   "click",
@@ -369,9 +410,9 @@ switchTokens.addEventListener(
 );
 
 
-// ----------------------------------------
+// ========================================
 // NUMBER FORMAT
-// ----------------------------------------
+// ========================================
 
 function formatNumber(value) {
 
@@ -406,9 +447,9 @@ function formatNumber(value) {
 }
 
 
-// ----------------------------------------
+// ========================================
 // BASE UNITS
-// ----------------------------------------
+// ========================================
 
 function toBaseUnits(
   amount,
@@ -440,9 +481,9 @@ function toBaseUnits(
 }
 
 
-// ----------------------------------------
+// ========================================
 // REQUEST QUOTE
-// ----------------------------------------
+// ========================================
 
 function requestQuote() {
 
@@ -460,9 +501,9 @@ function requestQuote() {
 }
 
 
-// ----------------------------------------
-// RUN QUOTE
-// ----------------------------------------
+// ========================================
+// RUN JUPITER QUOTE
+// ========================================
 
 async function runQuote() {
 
@@ -484,6 +525,8 @@ async function runQuote() {
   latestQuote =
     null;
 
+
+  // EMPTY AMOUNT
 
   if (
     !Number.isFinite(amount) ||
@@ -509,6 +552,8 @@ async function runQuote() {
 
   }
 
+
+  // SAME TOKEN
 
   if (
     payToken ===
@@ -581,15 +626,18 @@ async function runQuote() {
       input.mint
     );
 
+
     url.searchParams.set(
       "outputMint",
       output.mint
     );
 
+
     url.searchParams.set(
       "amount",
       rawAmount
     );
+
 
     url.searchParams.set(
       "slippageBps",
@@ -599,7 +647,14 @@ async function runQuote() {
 
     const response =
       await fetch(
-        url.toString()
+        url.toString(),
+        {
+          method: "GET",
+          headers: {
+            "Accept":
+              "application/json"
+          }
+        }
       );
 
 
@@ -646,6 +701,17 @@ async function runQuote() {
         10,
         output.decimals
       );
+
+
+    if (
+      !Number.isFinite(outputAmount)
+    ) {
+
+      throw new Error(
+        "Invalid quote amount"
+      );
+
+    }
 
 
     const rate =
@@ -724,9 +790,9 @@ async function runQuote() {
 }
 
 
-// ----------------------------------------
+// ========================================
 // AMOUNT INPUT
-// ----------------------------------------
+// ========================================
 
 payAmount.addEventListener(
   "input",
@@ -734,9 +800,9 @@ payAmount.addEventListener(
 );
 
 
-// ----------------------------------------
+// ========================================
 // AUTO REFRESH
-// ----------------------------------------
+// ========================================
 
 function startQuoteRefresh() {
 
@@ -769,9 +835,9 @@ function startQuoteRefresh() {
 startQuoteRefresh();
 
 
-// ----------------------------------------
+// ========================================
 // PHANTOM PROVIDER
-// ----------------------------------------
+// ========================================
 
 function getPhantomProvider() {
 
@@ -790,9 +856,9 @@ function getPhantomProvider() {
 }
 
 
-// ----------------------------------------
+// ========================================
 // CONNECT PHANTOM
-// ----------------------------------------
+// ========================================
 
 connectWallet.addEventListener(
   "click",
@@ -866,9 +932,9 @@ connectWallet.addEventListener(
 );
 
 
-// ----------------------------------------
-// DISCONNECT
-// ----------------------------------------
+// ========================================
+// PHANTOM DISCONNECT
+// ========================================
 
 if (window.solana) {
 
@@ -895,283 +961,118 @@ if (window.solana) {
 
 
 // ========================================
-// BUILD + EXECUTE SWAP
+// BUILD JUPITER TRANSACTION
 // ========================================
 
-async function executeSwap() {
+async function buildSwapTransaction() {
 
-  if (isSwapping) {
-    return;
-  }
+  if (!latestQuote) {
 
-
-  const provider =
-    getPhantomProvider();
-
-
-  if (!provider) {
-
-    alert(
-      "Phantom was not detected."
+    throw new Error(
+      "No valid Jupiter quote available."
     );
-
-    return;
 
   }
 
 
   if (!walletAddress) {
 
-    alert(
-      "Connect Phantom first."
+    throw new Error(
+      "Wallet is not connected."
     );
 
-    return;
-
   }
 
-
-  if (!latestQuote) {
-
-    quoteStatus.textContent =
-      "Getting a fresh quote...";
-
-    requestQuote();
-
-    return;
-
-  }
-
-
-  isSwapping =
-    true;
-
-
-  swapButton.disabled =
-    true;
-
-  swapButton.textContent =
-    "Preparing swap...";
 
   quoteStatus.textContent =
     "Building transaction...";
 
 
-  try {
+  const response =
+    await fetch(
+      `${JUPITER_API}/swap`,
+      {
+        method: "POST",
 
-    // --------------------------------
-    // ASK JUPITER TO BUILD TRANSACTION
-    // --------------------------------
+        headers: {
+          "Content-Type":
+            "application/json",
 
-    const response =
-      await fetch(
-        `${JUPITER_API}/swap`,
-        {
-          method: "POST",
+          "Accept":
+            "application/json"
+        },
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
+        body: JSON.stringify({
 
-          body: JSON.stringify({
+          userPublicKey:
+            walletAddress,
 
-            userPublicKey:
-              walletAddress,
+          quoteResponse:
+            latestQuote,
 
-            quoteResponse:
-              latestQuote,
+          dynamicComputeUnitLimit:
+            true,
 
-            dynamicComputeUnitLimit:
-              true,
+          prioritizationFeeLamports: {
 
-            prioritizationFeeLamports: {
+            priorityLevelWithMaxLamports: {
 
-              priorityLevelWithMaxLamports: {
+              priorityLevel:
+                "veryHigh",
 
-                priorityLevel:
-                  "veryHigh",
-
-                maxLamports:
-                  1000000
-
-              }
+              maxLamports:
+                1000000
 
             }
 
-          })
+          }
 
-        }
-      );
+        })
 
-
-    const data =
-      await response.json();
-
-
-    console.log(
-      "Jupiter swap response:",
-      data
+      }
     );
 
 
-    if (!response.ok) {
-
-      throw new Error(
-        data?.error ||
-        data?.message ||
-        `Swap build failed (${response.status})`
-      );
-
-    }
+  const data =
+    await response.json();
 
 
-    if (
-      !data.swapTransaction
-    ) {
-
-      throw new Error(
-        "Jupiter did not return a transaction."
-      );
-
-    }
+  console.log(
+    "Jupiter transaction response:",
+    data
+  );
 
 
-    // --------------------------------
-    // DECODE BASE64 TRANSACTION
-    // --------------------------------
+  if (!response.ok) {
 
-    quoteStatus.textContent =
-      "Transaction ready. Confirm in Phantom...";
-
-
-    const transaction =
-      base64ToUint8Array(
-        data.swapTransaction
-      );
-
-
-    // --------------------------------
-    // SEND TO PHANTOM
-    // --------------------------------
-
-    const signedResult =
-      await provider.signAndSendTransaction(
-        transaction
-      );
-
-
-    console.log(
-      "Phantom result:",
-      signedResult
-    );
-
-
-    const signature =
-      signedResult.signature ||
-      signedResult;
-
-
-    quoteStatus.textContent =
-      "Transaction sent. Confirming...";
-
-
-    swapButton.textContent =
-      "Confirming...";
-
-
-    // --------------------------------
-    // CONFIRM ON SOLANA
-    // --------------------------------
-
-    const confirmed =
-      await confirmTransaction(
-        signature,
-        data.lastValidBlockHeight
-      );
-
-
-    if (!confirmed) {
-
-      throw new Error(
-        "Transaction was sent but confirmation timed out."
-      );
-
-    }
-
-
-    // --------------------------------
-    // SUCCESS
-    // --------------------------------
-
-    quoteStatus.textContent =
-      "Swap successful ✓";
-
-
-    swapButton.textContent =
-      "Swap successful ✓";
-
-
-    swapButton.disabled =
-      true;
-
-
-    showTransactionResult(
-      signature
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Swap build failed (${response.status})`
     );
 
   }
 
 
-  catch (error) {
+  if (
+    !data.swapTransaction
+  ) {
 
-    console.error(
-      "TwinSwap execution error:",
-      error
+    throw new Error(
+      "Jupiter did not return a swap transaction."
     );
 
-
-    if (
-      error?.code === 4001
-    ) {
-
-      quoteStatus.textContent =
-        "Transaction cancelled in Phantom.";
-
-    }
-
-    else {
-
-      quoteStatus.textContent =
-        error.message ||
-        "Transaction failed.";
-
-    }
-
-
-    swapButton.disabled =
-      false;
-
-
-    swapButton.textContent =
-      `Swap ${payToken} → ${receiveToken}`;
-
   }
 
 
-  finally {
-
-    isSwapping =
-      false;
-
-  }
+  return data;
 
 }
 
 
-// ----------------------------------------
+// ========================================
 // BASE64 → UINT8ARRAY
-// ----------------------------------------
+// ========================================
 
 function base64ToUint8Array(
   base64
@@ -1204,9 +1105,38 @@ function base64ToUint8Array(
 }
 
 
-// ----------------------------------------
+// ========================================
+// DESERIALIZE JUPITER TRANSACTION
+// ========================================
+
+async function deserializeJupiterTransaction(
+  base64Transaction
+) {
+
+  const solana =
+    await loadSolanaWeb3();
+
+
+  const transactionBytes =
+    base64ToUint8Array(
+      base64Transaction
+    );
+
+
+  const transaction =
+    solana.VersionedTransaction.deserialize(
+      transactionBytes
+    );
+
+
+  return transaction;
+
+}
+
+
+// ========================================
 // CONFIRM TRANSACTION
-// ----------------------------------------
+// ========================================
 
 async function confirmTransaction(
   signature,
@@ -1268,9 +1198,7 @@ async function confirmTransaction(
 
       if (status) {
 
-        if (
-          status.err
-        ) {
+        if (status.err) {
 
           throw new Error(
             "Solana rejected the transaction."
@@ -1281,9 +1209,9 @@ async function confirmTransaction(
 
         if (
           status.confirmationStatus ===
-          "confirmed" ||
+            "confirmed" ||
           status.confirmationStatus ===
-          "finalized"
+            "finalized"
         ) {
 
           return true;
@@ -1301,6 +1229,15 @@ async function confirmTransaction(
         "Confirmation check:",
         error
       );
+
+      if (
+        error.message ===
+        "Solana rejected the transaction."
+      ) {
+
+        throw error;
+
+      }
 
     }
 
@@ -1324,9 +1261,9 @@ async function confirmTransaction(
 }
 
 
-// ----------------------------------------
-// TRANSACTION RESULT
-// ----------------------------------------
+// ========================================
+// SHOW TRANSACTION RESULT
+// ========================================
 
 function showTransactionResult(
   signature
@@ -1358,9 +1295,265 @@ function showTransactionResult(
 }
 
 
-// ----------------------------------------
+// ========================================
+// EXECUTE SWAP
+// ========================================
+
+async function executeSwap() {
+
+  if (isSwapping) {
+    return;
+  }
+
+
+  const provider =
+    getPhantomProvider();
+
+
+  if (!provider) {
+
+    alert(
+      "Phantom was not detected. Open TwinSwap inside Phantom."
+    );
+
+    return;
+
+  }
+
+
+  if (!walletAddress) {
+
+    alert(
+      "Connect Phantom first."
+    );
+
+    return;
+
+  }
+
+
+  if (!latestQuote) {
+
+    quoteStatus.textContent =
+      "Getting a fresh quote...";
+
+    requestQuote();
+
+    return;
+
+  }
+
+
+  isSwapping =
+    true;
+
+
+  swapButton.disabled =
+    true;
+
+  swapButton.textContent =
+    "Preparing swap...";
+
+
+  try {
+
+    // ------------------------------------
+    // LOAD SOLANA WEB3
+    // ------------------------------------
+
+    await loadSolanaWeb3();
+
+
+    // ------------------------------------
+    // BUILD TRANSACTION
+    // ------------------------------------
+
+    const swapData =
+      await buildSwapTransaction();
+
+
+    // ------------------------------------
+    // CONVERT BASE64 TRANSACTION
+    // INTO REAL VERSIONED TRANSACTION
+    // ------------------------------------
+
+    quoteStatus.textContent =
+      "Transaction ready. Confirm in Phantom...";
+
+
+    const transaction =
+      await deserializeJupiterTransaction(
+        swapData.swapTransaction
+      );
+
+
+    console.log(
+      "Deserialized transaction:",
+      transaction
+    );
+
+
+    // ------------------------------------
+    // SEND TO PHANTOM
+    // ------------------------------------
+
+    const result =
+      await provider.signAndSendTransaction(
+        transaction
+      );
+
+
+    console.log(
+      "Phantom transaction result:",
+      result
+    );
+
+
+    const signature =
+      result?.signature ||
+      result;
+
+
+    if (!signature) {
+
+      throw new Error(
+        "Phantom did not return a transaction signature."
+      );
+
+    }
+
+
+    // ------------------------------------
+    // TRANSACTION SENT
+    // ------------------------------------
+
+    quoteStatus.textContent =
+      "Transaction sent. Confirming...";
+
+
+    swapButton.textContent =
+      "Confirming...";
+
+
+    // ------------------------------------
+    // CONFIRM ON SOLANA
+    // ------------------------------------
+
+    const confirmed =
+      await confirmTransaction(
+        signature,
+        swapData.lastValidBlockHeight
+      );
+
+
+    if (!confirmed) {
+
+      throw new Error(
+        "Transaction was sent but confirmation timed out."
+      );
+
+    }
+
+
+    // ------------------------------------
+    // SUCCESS
+    // ------------------------------------
+
+    quoteStatus.textContent =
+      "Swap successful ✓";
+
+
+    swapButton.textContent =
+      "Swap successful ✓";
+
+
+    swapButton.disabled =
+      true;
+
+
+    latestQuote =
+      null;
+
+
+    showTransactionResult(
+      signature
+    );
+
+  }
+
+
+  catch (error) {
+
+    console.error(
+      "TwinSwap execution error:",
+      error
+    );
+
+
+    // Phantom rejection
+
+    if (
+      error?.code === 4001 ||
+      error?.message?.toLowerCase().includes(
+        "rejected"
+      ) ||
+      error?.message?.toLowerCase().includes(
+        "user rejected"
+      )
+    ) {
+
+      quoteStatus.textContent =
+        "Transaction cancelled in Phantom.";
+
+    }
+
+
+    // Insufficient balance
+
+    else if (
+      error?.message?.toLowerCase().includes(
+        "insufficient"
+      )
+    ) {
+
+      quoteStatus.textContent =
+        "Insufficient balance for this swap.";
+
+    }
+
+
+    else {
+
+      quoteStatus.textContent =
+        error.message ||
+        "Transaction failed.";
+
+    }
+
+
+    swapButton.disabled =
+      false;
+
+
+    swapButton.textContent =
+      `Swap ${payToken} → ${receiveToken}`;
+
+  }
+
+
+  finally {
+
+    isSwapping =
+      false;
+
+  }
+
+}
+
+
+// ========================================
 // SWAP BUTTON
-// ----------------------------------------
+// ========================================
 
 swapButton.addEventListener(
   "click",
@@ -1368,9 +1561,9 @@ swapButton.addEventListener(
 );
 
 
-// ----------------------------------------
+// ========================================
 // INITIALIZE
-// ----------------------------------------
+// ========================================
 
 updateTokenDisplay();
 
