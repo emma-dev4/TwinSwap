@@ -1,6 +1,6 @@
 // ========================================
 // TWINSWAP
-// LIVE SOLANA JUPITER QUOTE SYSTEM
+// LIVE SOLANA JUPITER SWAP
 // ========================================
 
 
@@ -49,11 +49,19 @@ const TOKENS = {
 
 
 // ----------------------------------------
-// JUPITER QUOTE API
+// JUPITER API
 // ----------------------------------------
 
-const JUPITER_QUOTE_URL =
-  "https://lite-api.jup.ag/swap/v1/quote";
+const JUPITER_API =
+  "https://lite-api.jup.ag/swap/v1";
+
+
+// ----------------------------------------
+// SOLANA RPC
+// ----------------------------------------
+
+const SOLANA_RPC =
+  "https://api.mainnet-beta.solana.com";
 
 
 // ----------------------------------------
@@ -71,6 +79,8 @@ let refreshTimer = null;
 let quoteRequestNumber = 0;
 
 let latestQuote = null;
+
+let isSwapping = false;
 
 
 // ----------------------------------------
@@ -164,7 +174,7 @@ function updateTokenDisplay() {
 
 
 // ----------------------------------------
-// CLOSE DROPDOWNS
+// CLOSE MENUS
 // ----------------------------------------
 
 function closeMenus() {
@@ -177,7 +187,7 @@ function closeMenus() {
 
 
 // ----------------------------------------
-// PAY TOKEN DROPDOWN
+// PAY TOKEN MENU
 // ----------------------------------------
 
 payTokenButton.addEventListener(
@@ -199,7 +209,7 @@ payTokenButton.addEventListener(
 
 
 // ----------------------------------------
-// RECEIVE TOKEN DROPDOWN
+// RECEIVE TOKEN MENU
 // ----------------------------------------
 
 receiveTokenButton.addEventListener(
@@ -221,16 +231,12 @@ receiveTokenButton.addEventListener(
 
 
 // ----------------------------------------
-// CLOSE WHEN CLICKING OUTSIDE
+// CLOSE MENUS OUTSIDE
 // ----------------------------------------
 
 document.addEventListener(
   "click",
-  function() {
-
-    closeMenus();
-
-  }
+  closeMenus
 );
 
 
@@ -248,7 +254,6 @@ payTokenMenu
 
         event.stopPropagation();
 
-
         const selected =
           button.dataset.token;
 
@@ -258,7 +263,6 @@ payTokenMenu
         }
 
 
-        // Prevent same token pair
         if (
           selected ===
           receiveToken
@@ -301,7 +305,6 @@ receiveTokenMenu
 
         event.stopPropagation();
 
-
         const selected =
           button.dataset.token;
 
@@ -311,7 +314,6 @@ receiveTokenMenu
         }
 
 
-        // Prevent same token pair
         if (
           selected ===
           payToken
@@ -355,7 +357,6 @@ switchTokens.addEventListener(
     payToken =
       receiveToken;
 
-
     receiveToken =
       oldPay;
 
@@ -378,25 +379,17 @@ function formatNumber(value) {
     Number(value);
 
 
-  if (
-    !Number.isFinite(number)
-  ) {
-
+  if (!Number.isFinite(number)) {
     return "0";
-
   }
 
 
   if (number === 0) {
-
     return "0";
-
   }
 
 
-  if (
-    number < 0.000001
-  ) {
+  if (number < 0.000001) {
 
     return number.toExponential(5);
 
@@ -414,7 +407,7 @@ function formatNumber(value) {
 
 
 // ----------------------------------------
-// BASE UNIT CONVERSION
+// BASE UNITS
 // ----------------------------------------
 
 function toBaseUnits(
@@ -468,7 +461,7 @@ function requestQuote() {
 
 
 // ----------------------------------------
-// LIVE JUPITER QUOTE
+// RUN QUOTE
 // ----------------------------------------
 
 async function runQuote() {
@@ -484,7 +477,6 @@ async function runQuote() {
   const input =
     TOKENS[payToken];
 
-
   const output =
     TOKENS[receiveToken];
 
@@ -492,10 +484,6 @@ async function runQuote() {
   latestQuote =
     null;
 
-
-  // ------------------------------------
-  // EMPTY AMOUNT
-  // ------------------------------------
 
   if (
     !Number.isFinite(amount) ||
@@ -522,10 +510,6 @@ async function runQuote() {
   }
 
 
-  // ------------------------------------
-  // SAME TOKEN
-  // ------------------------------------
-
   if (
     payToken ===
     receiveToken
@@ -551,23 +535,10 @@ async function runQuote() {
   }
 
 
-  // ------------------------------------
-  // TOKEN CHECK
-  // ------------------------------------
-
-  if (
-    !input ||
-    !output
-  ) {
-
+  if (!input || !output) {
     return;
-
   }
 
-
-  // ------------------------------------
-  // CONVERT AMOUNT
-  // ------------------------------------
 
   const rawAmount =
     toBaseUnits(
@@ -577,15 +548,9 @@ async function runQuote() {
 
 
   if (!rawAmount) {
-
     return;
-
   }
 
-
-  // ------------------------------------
-  // LOADING STATE
-  // ------------------------------------
 
   quoteStatus.textContent =
     "Fetching live quote...";
@@ -603,15 +568,11 @@ async function runQuote() {
     "Getting quote...";
 
 
-  // ------------------------------------
-  // BUILD JUPITER REQUEST
-  // ------------------------------------
-
   try {
 
     const url =
       new URL(
-        JUPITER_QUOTE_URL
+        `${JUPITER_API}/quote`
       );
 
 
@@ -620,18 +581,15 @@ async function runQuote() {
       input.mint
     );
 
-
     url.searchParams.set(
       "outputMint",
       output.mint
     );
 
-
     url.searchParams.set(
       "amount",
       rawAmount
     );
-
 
     url.searchParams.set(
       "slippageBps",
@@ -639,42 +597,15 @@ async function runQuote() {
     );
 
 
-    console.log(
-      "TwinSwap quote:",
-      url.toString()
-    );
-
-
-    // --------------------------------
-    // FETCH
-    // --------------------------------
-
     const response =
       await fetch(
-        url.toString(),
-        {
-          method: "GET",
-          headers: {
-            "Accept":
-              "application/json"
-          }
-        }
+        url.toString()
       );
 
 
     const data =
       await response.json();
 
-
-    console.log(
-      "Jupiter response:",
-      data
-    );
-
-
-    // --------------------------------
-    // IGNORE OLD REQUEST
-    // --------------------------------
 
     if (
       requestId !==
@@ -686,10 +617,6 @@ async function runQuote() {
     }
 
 
-    // --------------------------------
-    // API ERROR
-    // --------------------------------
-
     if (!response.ok) {
 
       throw new Error(
@@ -700,10 +627,6 @@ async function runQuote() {
 
     }
 
-
-    // --------------------------------
-    // NO ROUTE
-    // --------------------------------
 
     if (
       !data ||
@@ -717,53 +640,22 @@ async function runQuote() {
     }
 
 
-    // --------------------------------
-    // OUTPUT AMOUNT
-    // --------------------------------
-
     const outputAmount =
-      Number(
-        data.outAmount
-      ) /
+      Number(data.outAmount) /
       Math.pow(
         10,
         output.decimals
       );
 
 
-    if (
-      !Number.isFinite(
-        outputAmount
-      )
-    ) {
-
-      throw new Error(
-        "Invalid quote amount"
-      );
-
-    }
-
-
-    // --------------------------------
-    // EXCHANGE RATE
-    // --------------------------------
-
     const rate =
       outputAmount /
       amount;
 
 
-    // --------------------------------
-    // SAVE QUOTE
-    // --------------------------------
-
     latestQuote =
       data;
 
-
-    // --------------------------------
-    // DISPLAY RESULT
-    // --------------------------------
 
     receiveAmount.value =
       formatNumber(
@@ -802,7 +694,7 @@ async function runQuote() {
 
 
     console.error(
-      "TwinSwap quote error:",
+      "Quote error:",
       error
     );
 
@@ -843,7 +735,7 @@ payAmount.addEventListener(
 
 
 // ----------------------------------------
-// AUTO REFRESH LIVE RATE
+// AUTO REFRESH
 // ----------------------------------------
 
 function startQuoteRefresh() {
@@ -859,7 +751,8 @@ function startQuoteRefresh() {
 
         if (
           payAmount.value &&
-          Number(payAmount.value) > 0
+          Number(payAmount.value) > 0 &&
+          !isSwapping
         ) {
 
           requestQuote();
@@ -943,6 +836,16 @@ connectWallet.addEventListener(
       quoteStatus.textContent =
         "Phantom connected";
 
+
+      if (
+        payAmount.value &&
+        Number(payAmount.value) > 0
+      ) {
+
+        requestQuote();
+
+      }
+
     }
 
 
@@ -964,7 +867,7 @@ connectWallet.addEventListener(
 
 
 // ----------------------------------------
-// PHANTOM DISCONNECT
+// DISCONNECT
 // ----------------------------------------
 
 if (window.solana) {
@@ -976,10 +879,11 @@ if (window.solana) {
       walletAddress =
         null;
 
+      latestQuote =
+        null;
 
       walletStatus.textContent =
         "Not connected";
-
 
       connectWallet.textContent =
         "Connect Wallet";
@@ -990,39 +894,477 @@ if (window.solana) {
 }
 
 
+// ========================================
+// BUILD + EXECUTE SWAP
+// ========================================
+
+async function executeSwap() {
+
+  if (isSwapping) {
+    return;
+  }
+
+
+  const provider =
+    getPhantomProvider();
+
+
+  if (!provider) {
+
+    alert(
+      "Phantom was not detected."
+    );
+
+    return;
+
+  }
+
+
+  if (!walletAddress) {
+
+    alert(
+      "Connect Phantom first."
+    );
+
+    return;
+
+  }
+
+
+  if (!latestQuote) {
+
+    quoteStatus.textContent =
+      "Getting a fresh quote...";
+
+    requestQuote();
+
+    return;
+
+  }
+
+
+  isSwapping =
+    true;
+
+
+  swapButton.disabled =
+    true;
+
+  swapButton.textContent =
+    "Preparing swap...";
+
+  quoteStatus.textContent =
+    "Building transaction...";
+
+
+  try {
+
+    // --------------------------------
+    // ASK JUPITER TO BUILD TRANSACTION
+    // --------------------------------
+
+    const response =
+      await fetch(
+        `${JUPITER_API}/swap`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+
+            userPublicKey:
+              walletAddress,
+
+            quoteResponse:
+              latestQuote,
+
+            dynamicComputeUnitLimit:
+              true,
+
+            prioritizationFeeLamports: {
+
+              priorityLevelWithMaxLamports: {
+
+                priorityLevel:
+                  "veryHigh",
+
+                maxLamports:
+                  1000000
+
+              }
+
+            }
+
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    console.log(
+      "Jupiter swap response:",
+      data
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        `Swap build failed (${response.status})`
+      );
+
+    }
+
+
+    if (
+      !data.swapTransaction
+    ) {
+
+      throw new Error(
+        "Jupiter did not return a transaction."
+      );
+
+    }
+
+
+    // --------------------------------
+    // DECODE BASE64 TRANSACTION
+    // --------------------------------
+
+    quoteStatus.textContent =
+      "Transaction ready. Confirm in Phantom...";
+
+
+    const transaction =
+      base64ToUint8Array(
+        data.swapTransaction
+      );
+
+
+    // --------------------------------
+    // SEND TO PHANTOM
+    // --------------------------------
+
+    const signedResult =
+      await provider.signAndSendTransaction(
+        transaction
+      );
+
+
+    console.log(
+      "Phantom result:",
+      signedResult
+    );
+
+
+    const signature =
+      signedResult.signature ||
+      signedResult;
+
+
+    quoteStatus.textContent =
+      "Transaction sent. Confirming...";
+
+
+    swapButton.textContent =
+      "Confirming...";
+
+
+    // --------------------------------
+    // CONFIRM ON SOLANA
+    // --------------------------------
+
+    const confirmed =
+      await confirmTransaction(
+        signature,
+        data.lastValidBlockHeight
+      );
+
+
+    if (!confirmed) {
+
+      throw new Error(
+        "Transaction was sent but confirmation timed out."
+      );
+
+    }
+
+
+    // --------------------------------
+    // SUCCESS
+    // --------------------------------
+
+    quoteStatus.textContent =
+      "Swap successful ✓";
+
+
+    swapButton.textContent =
+      "Swap successful ✓";
+
+
+    swapButton.disabled =
+      true;
+
+
+    showTransactionResult(
+      signature
+    );
+
+  }
+
+
+  catch (error) {
+
+    console.error(
+      "TwinSwap execution error:",
+      error
+    );
+
+
+    if (
+      error?.code === 4001
+    ) {
+
+      quoteStatus.textContent =
+        "Transaction cancelled in Phantom.";
+
+    }
+
+    else {
+
+      quoteStatus.textContent =
+        error.message ||
+        "Transaction failed.";
+
+    }
+
+
+    swapButton.disabled =
+      false;
+
+
+    swapButton.textContent =
+      `Swap ${payToken} → ${receiveToken}`;
+
+  }
+
+
+  finally {
+
+    isSwapping =
+      false;
+
+  }
+
+}
+
+
+// ----------------------------------------
+// BASE64 → UINT8ARRAY
+// ----------------------------------------
+
+function base64ToUint8Array(
+  base64
+) {
+
+  const binary =
+    atob(base64);
+
+
+  const bytes =
+    new Uint8Array(
+      binary.length
+    );
+
+
+  for (
+    let i = 0;
+    i < binary.length;
+    i++
+  ) {
+
+    bytes[i] =
+      binary.charCodeAt(i);
+
+  }
+
+
+  return bytes;
+
+}
+
+
+// ----------------------------------------
+// CONFIRM TRANSACTION
+// ----------------------------------------
+
+async function confirmTransaction(
+  signature,
+  lastValidBlockHeight
+) {
+
+  const start =
+    Date.now();
+
+
+  while (
+    Date.now() - start <
+    60000
+  ) {
+
+    try {
+
+      const response =
+        await fetch(
+          SOLANA_RPC,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+
+              jsonrpc: "2.0",
+
+              id: 1,
+
+              method:
+                "getSignatureStatuses",
+
+              params: [
+                [signature],
+                {
+                  searchTransactionHistory:
+                    true
+                }
+              ]
+
+            })
+
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      const status =
+        data?.result?.value?.[0];
+
+
+      if (status) {
+
+        if (
+          status.err
+        ) {
+
+          throw new Error(
+            "Solana rejected the transaction."
+          );
+
+        }
+
+
+        if (
+          status.confirmationStatus ===
+          "confirmed" ||
+          status.confirmationStatus ===
+          "finalized"
+        ) {
+
+          return true;
+
+        }
+
+      }
+
+    }
+
+
+    catch (error) {
+
+      console.error(
+        "Confirmation check:",
+        error
+      );
+
+    }
+
+
+    await new Promise(
+      function(resolve) {
+
+        setTimeout(
+          resolve,
+          1500
+        );
+
+      }
+    );
+
+  }
+
+
+  return false;
+
+}
+
+
+// ----------------------------------------
+// TRANSACTION RESULT
+// ----------------------------------------
+
+function showTransactionResult(
+  signature
+) {
+
+  const shortSignature =
+    signature.slice(0, 6) +
+    "..." +
+    signature.slice(-6);
+
+
+  const message =
+    `Swap successful!\n\nTransaction:\n${shortSignature}\n\nOpen Solscan to view it?`;
+
+
+  const open =
+    confirm(message);
+
+
+  if (open) {
+
+    window.open(
+      `https://solscan.io/tx/${signature}`,
+      "_blank"
+    );
+
+  }
+
+}
+
+
 // ----------------------------------------
 // SWAP BUTTON
 // ----------------------------------------
 
 swapButton.addEventListener(
   "click",
-  function() {
-
-    if (!walletAddress) {
-
-      alert(
-        "Connect Phantom first."
-      );
-
-      return;
-
-    }
-
-
-    if (!latestQuote) {
-
-      requestQuote();
-
-      return;
-
-    }
-
-
-    alert(
-      "Live quote confirmed. Transaction execution will be added in the next phase."
-    );
-
-  }
+  executeSwap
 );
 
 
