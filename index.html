@@ -19,13 +19,12 @@
       <span>Keep it simple.</span>
     </h1>
 
-    <p>
-      Fast and simple token swapping powered by Solana.
-    </p>
+    <p>Fast and simple token swapping powered by Solana.</p>
   </header>
 
-
   <main>
+
+    <!-- ================= SWAP ================= -->
 
     <section class="swap-card">
 
@@ -33,9 +32,6 @@
         <h2>Swap</h2>
         <span id="walletStatus">Not connected</span>
       </div>
-
-
-      <!-- PAY -->
 
       <div class="token-box">
 
@@ -64,25 +60,11 @@
 
             <div id="payTokenMenu" class="token-menu">
 
-              <button data-token="USDC">
-                <span>💵</span> USDC
-              </button>
-
-              <button data-token="USDT">
-                <span>💵</span> USDT
-              </button>
-
-              <button data-token="SOL">
-                <span>◎</span> SOL
-              </button>
-
-              <button data-token="JUP">
-                <span>🪐</span> JUP
-              </button>
-
-              <button data-token="BONK">
-                <span>🐕</span> BONK
-              </button>
+              <button data-token="USDC">💵 USDC</button>
+              <button data-token="USDT">💵 USDT</button>
+              <button data-token="SOL">◎ SOL</button>
+              <button data-token="JUP">🪐 JUP</button>
+              <button data-token="BONK">🐕 BONK</button>
 
             </div>
 
@@ -92,15 +74,9 @@
 
       </div>
 
-
-      <!-- SWITCH -->
-
-      <button id="switchTokens" class="switch-button" title="Switch tokens">
+      <button id="switchTokens" class="switch-button">
         ⇅
       </button>
-
-
-      <!-- RECEIVE -->
 
       <div class="token-box">
 
@@ -128,25 +104,11 @@
 
             <div id="receiveTokenMenu" class="token-menu">
 
-              <button data-token="USDC">
-                <span>💵</span> USDC
-              </button>
-
-              <button data-token="USDT">
-                <span>💵</span> USDT
-              </button>
-
-              <button data-token="SOL">
-                <span>◎</span> SOL
-              </button>
-
-              <button data-token="JUP">
-                <span>🪐</span> JUP
-              </button>
-
-              <button data-token="BONK">
-                <span>🐕</span> BONK
-              </button>
+              <button data-token="USDC">💵 USDC</button>
+              <button data-token="USDT">💵 USDT</button>
+              <button data-token="SOL">◎ SOL</button>
+              <button data-token="JUP">🪐 JUP</button>
+              <button data-token="BONK">🐕 BONK</button>
 
             </div>
 
@@ -156,35 +118,18 @@
 
       </div>
 
-
-      <!-- RATE -->
-
       <div class="rate-box">
-
         <span>Exchange rate</span>
-
-        <strong id="exchangeRate">
-          Enter an amount
-        </strong>
-
+        <strong id="exchangeRate">Enter an amount</strong>
       </div>
-
-
-      <!-- STATUS -->
 
       <div id="quoteStatus" class="quote-status">
         Ready
       </div>
 
-
-      <!-- CONNECT -->
-
       <button id="connectWallet" class="connect-button">
         Connect Wallet
       </button>
-
-
-      <!-- SWAP -->
 
       <button id="swapButton" class="swap-button" disabled>
         Enter amount
@@ -192,6 +137,40 @@
 
     </section>
 
+
+    <!-- ================= PORTFOLIO ================= -->
+
+    <section class="portfolio-card">
+
+      <div class="portfolio-header">
+        <div>
+          <span class="portfolio-label">Your Portfolio</span>
+          <h2 id="portfolioTotal">$0.00</h2>
+        </div>
+
+        <button id="refreshPortfolio" class="refresh-button">
+          ↻
+        </button>
+      </div>
+
+      <div id="portfolioWallet" class="portfolio-wallet">
+        Connect Phantom to view your portfolio
+      </div>
+
+      <div id="portfolioList" class="portfolio-list">
+
+        <div class="portfolio-empty">
+          <div class="empty-icon">◎</div>
+          <strong>No wallet connected</strong>
+          <span>Connect Phantom to see your assets.</span>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= INFO ================= -->
 
     <section class="info-section">
 
@@ -214,14 +193,11 @@
 
   </main>
 
-
   <footer>
-    <p>© 2026 TwinSwap</p>
+    <p>©️ 2026 TwinSwap</p>
   </footer>
 
-
-  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
