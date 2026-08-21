@@ -1,8 +1,9 @@
-// ========================================
+// ======================================================
 // TWINSWAP
-// ========================================
+// ======================================================
 
 const TOKENS = {
+
   SOL: {
     symbol: "SOL",
     icon: "◎",
@@ -37,7 +38,13 @@ const TOKENS = {
     mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
     decimals: 5
   }
+
 };
+
+
+// ======================================================
+// CONFIG
+// ======================================================
 
 const JUPITER_API =
   "https://lite-api.jup.ag/swap/v1";
@@ -45,27 +52,38 @@ const JUPITER_API =
 const SOLANA_RPC =
   "https://api.mainnet-beta.solana.com";
 
+
+// ======================================================
+// STATE
+// ======================================================
+
 let payToken = "USDC";
 let receiveToken = "SOL";
 
 let walletAddress = null;
+
 let latestQuote = null;
 
 let quoteTimer = null;
+
 let refreshTimer = null;
+
 let quoteRequestNumber = 0;
+
 let isSwapping = false;
 
-// ========================================
-// ELEMENT HELPER
-// ========================================
+
+// ======================================================
+// HELPER
+// ======================================================
 
 const $ = id =>
   document.getElementById(id);
 
-// ========================================
+
+// ======================================================
 // ELEMENTS
-// ========================================
+// ======================================================
 
 const payAmount =
   $("payAmount");
@@ -115,9 +133,10 @@ const walletStatus =
 const swapButton =
   $("swapButton");
 
-// ========================================
+
+// ======================================================
 // PHANTOM
-// ========================================
+// ======================================================
 
 function getPhantomProvider() {
 
@@ -136,9 +155,10 @@ function getPhantomProvider() {
   return null;
 }
 
-// ========================================
+
+// ======================================================
 // TABS
-// ========================================
+// ======================================================
 
 document
   .querySelectorAll(".nav-button")
@@ -181,9 +201,10 @@ document
 
   });
 
-// ========================================
+
+// ======================================================
 // TOKEN DISPLAY
-// ========================================
+// ======================================================
 
 function updateTokenDisplay() {
 
@@ -206,9 +227,10 @@ function updateTokenDisplay() {
     receive.icon;
 }
 
-// ========================================
-// MENUS
-// ========================================
+
+// ======================================================
+// TOKEN MENUS
+// ======================================================
 
 function closeMenus() {
 
@@ -219,6 +241,7 @@ function closeMenus() {
   receiveTokenMenu.classList.remove(
     "show"
   );
+
 }
 
 payTokenButton.addEventListener(
@@ -234,6 +257,7 @@ payTokenButton.addEventListener(
     payTokenMenu.classList.toggle(
       "show"
     );
+
   }
 );
 
@@ -250,6 +274,7 @@ receiveTokenButton.addEventListener(
     receiveTokenMenu.classList.toggle(
       "show"
     );
+
   }
 );
 
@@ -258,9 +283,10 @@ document.addEventListener(
   closeMenus
 );
 
-// ========================================
+
+// ======================================================
 // TOKEN SELECTION
-// ========================================
+// ======================================================
 
 payTokenMenu
   .querySelectorAll("button")
@@ -289,12 +315,15 @@ payTokenMenu
 
         closeMenus();
 
+        updatePayBalance();
+
         requestQuote();
 
       }
     );
 
   });
+
 
 receiveTokenMenu
   .querySelectorAll("button")
@@ -330,9 +359,10 @@ receiveTokenMenu
 
   });
 
-// ========================================
+
+// ======================================================
 // SWITCH TOKENS
-// ========================================
+// ======================================================
 
 switchTokens.addEventListener(
   "click",
@@ -349,14 +379,17 @@ switchTokens.addEventListener(
 
     updateTokenDisplay();
 
+    updatePayBalance();
+
     requestQuote();
 
   }
 );
 
-// ========================================
-// FORMAT
-// ========================================
+
+// ======================================================
+// FORMATTING
+// ======================================================
 
 function formatNumber(value) {
 
@@ -373,10 +406,10 @@ function formatNumber(value) {
     return "0";
   }
 
-  if (number < 0.000001) {
-
+  if (
+    Math.abs(number) < 0.000001
+  ) {
     return number.toExponential(5);
-
   }
 
   return number.toLocaleString(
@@ -385,20 +418,30 @@ function formatNumber(value) {
       maximumFractionDigits: 8
     }
   );
+
 }
+
 
 function formatUSD(value) {
 
-  return Number(value || 0)
-    .toLocaleString(
-      "en-US",
-      {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 2
-      }
-    );
+  const number =
+    Number(value || 0);
+
+  if (!Number.isFinite(number)) {
+    return "$0.00";
+  }
+
+  return number.toLocaleString(
+    "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2
+    }
+  );
+
 }
+
 
 function toBaseUnits(
   amount,
@@ -422,11 +465,13 @@ function toBaseUnits(
       decimals
     )
   ).toString();
+
 }
 
-// ========================================
+
+// ======================================================
 // QUOTES
-// ========================================
+// ======================================================
 
 function requestQuote() {
 
@@ -439,7 +484,9 @@ function requestQuote() {
       runQuote,
       250
     );
+
 }
+
 
 async function runQuote() {
 
@@ -457,12 +504,14 @@ async function runQuote() {
 
   latestQuote = null;
 
+
   if (
     !Number.isFinite(amount) ||
     amount <= 0
   ) {
 
-    receiveAmount.value = "";
+    receiveAmount.value =
+      "";
 
     exchangeRate.textContent =
       "Enter an amount";
@@ -478,6 +527,7 @@ async function runQuote() {
 
     return;
   }
+
 
   if (
     payToken === receiveToken
@@ -501,6 +551,7 @@ async function runQuote() {
     return;
   }
 
+
   const rawAmount =
     toBaseUnits(
       amount,
@@ -510,6 +561,7 @@ async function runQuote() {
   if (!rawAmount) {
     return;
   }
+
 
   quoteStatus.textContent =
     "Fetching live quote...";
@@ -525,6 +577,7 @@ async function runQuote() {
 
   swapButton.textContent =
     "Getting quote...";
+
 
   try {
 
@@ -553,11 +606,13 @@ async function runQuote() {
       "50"
     );
 
+
     const response =
       await fetch(url);
 
     const data =
       await response.json();
+
 
     if (
       requestId !==
@@ -565,6 +620,7 @@ async function runQuote() {
     ) {
       return;
     }
+
 
     if (!response.ok) {
 
@@ -576,6 +632,7 @@ async function runQuote() {
 
     }
 
+
     if (!data?.outAmount) {
 
       throw new Error(
@@ -583,6 +640,7 @@ async function runQuote() {
       );
 
     }
+
 
     const outputAmount =
       Number(data.outAmount) /
@@ -595,25 +653,31 @@ async function runQuote() {
       outputAmount /
       amount;
 
+
     latestQuote =
       data;
+
 
     receiveAmount.value =
       formatNumber(
         outputAmount
       );
 
+
     exchangeRate.textContent =
       `1 ${input.symbol} ≈ ${formatNumber(rate)} ${output.symbol}`;
 
+
     quoteStatus.textContent =
       "Live Jupiter quote";
+
 
     swapButton.disabled =
       false;
 
     swapButton.textContent =
       `Swap ${input.symbol} → ${output.symbol}`;
+
 
   } catch (error) {
 
@@ -624,7 +688,11 @@ async function runQuote() {
       return;
     }
 
-    console.error(error);
+    console.error(
+      "Quote error:",
+      error
+    );
+
 
     receiveAmount.value =
       "—";
@@ -641,17 +709,21 @@ async function runQuote() {
 
     swapButton.textContent =
       "Quote unavailable";
+
   }
+
 }
+
 
 payAmount.addEventListener(
   "input",
   requestQuote
 );
 
-// ========================================
-// AUTO REFRESH QUOTE
-// ========================================
+
+// ======================================================
+// AUTO QUOTE REFRESH
+// ======================================================
 
 refreshTimer =
   setInterval(
@@ -669,9 +741,10 @@ refreshTimer =
     10000
   );
 
-// ========================================
+
+// ======================================================
 // CONNECT WALLET
-// ========================================
+// ======================================================
 
 connectWallet.addEventListener(
   "click",
@@ -679,6 +752,7 @@ connectWallet.addEventListener(
 
     const provider =
       getPhantomProvider();
+
 
     if (!provider) {
 
@@ -689,13 +763,16 @@ connectWallet.addEventListener(
       return;
     }
 
+
     try {
 
       quoteStatus.textContent =
         "Connecting Phantom...";
 
+
       const response =
         await provider.connect();
+
 
       if (!response?.publicKey) {
 
@@ -705,23 +782,33 @@ connectWallet.addEventListener(
 
       }
 
+
       walletAddress =
         response.publicKey.toString();
+
 
       walletStatus.textContent =
         walletAddress.slice(0, 4) +
         "..." +
         walletAddress.slice(-4);
 
+
       connectWallet.textContent =
         "Wallet Connected";
+
 
       quoteStatus.textContent =
         "Phantom connected";
 
+
       updatePortfolioWallet();
 
-      loadPortfolio();
+      updateConnectionIndicator();
+
+      await loadPortfolio();
+
+      updatePayBalance();
+
 
       if (
         payAmount.value &&
@@ -730,6 +817,7 @@ connectWallet.addEventListener(
         requestQuote();
       }
 
+
     } catch (error) {
 
       console.error(error);
@@ -737,17 +825,20 @@ connectWallet.addEventListener(
       quoteStatus.textContent =
         error.message ||
         "Wallet connection cancelled";
+
     }
 
   }
 );
 
-// ========================================
-// WALLET DISCONNECT
-// ========================================
+
+// ======================================================
+// WALLET EVENTS
+// ======================================================
 
 const initialProvider =
   getPhantomProvider();
+
 
 if (initialProvider) {
 
@@ -772,16 +863,21 @@ if (initialProvider) {
 
       updatePortfolioWallet();
 
+      updateConnectionIndicator();
+
       resetPortfolio();
+
+      updatePayBalance();
 
     }
   );
 
 }
 
-// ========================================
+
+// ======================================================
 // PORTFOLIO
-// ========================================
+// ======================================================
 
 const PORTFOLIO_MINTS = {
 
@@ -799,10 +895,16 @@ const PORTFOLIO_MINTS = {
 
 };
 
+
+// ======================================================
+// PORTFOLIO UI
+// ======================================================
+
 function updatePortfolioWallet() {
 
   const element =
     $("portfolioWallet");
+
 
   if (!walletAddress) {
 
@@ -812,11 +914,39 @@ function updatePortfolioWallet() {
     return;
   }
 
+
   element.textContent =
     walletAddress.slice(0, 6) +
     "..." +
     walletAddress.slice(-6);
+
 }
+
+
+function updateConnectionIndicator() {
+
+  const dot =
+    $("walletConnectionDot");
+
+
+  if (
+    walletAddress
+  ) {
+
+    dot.classList.add(
+      "connected"
+    );
+
+  } else {
+
+    dot.classList.remove(
+      "connected"
+    );
+
+  }
+
+}
+
 
 function resetPortfolio() {
 
@@ -826,8 +956,12 @@ function resetPortfolio() {
   $("portfolioAssetCount").textContent =
     "0";
 
+  $("assetCountLabel").textContent =
+    "0 assets";
+
   $("portfolioStatus").textContent =
     "Connect Phantom to view your portfolio.";
+
 
   setAsset(
     "SOL",
@@ -858,11 +992,17 @@ function resetPortfolio() {
     0,
     0
   );
+
+
+  $("portfolioEmpty").hidden =
+    true;
+
 }
 
-// ========================================
+
+// ======================================================
 // SOLANA RPC
-// ========================================
+// ======================================================
 
 async function rpc(
   method,
@@ -884,7 +1024,7 @@ async function rpc(
 
           jsonrpc: "2.0",
 
-          id: 1,
+          id: Date.now(),
 
           method,
 
@@ -894,23 +1034,38 @@ async function rpc(
       }
     );
 
-  const data =
-    await response.json();
 
-  if (data.error) {
+  if (!response.ok) {
 
     throw new Error(
-      data.error.message
+      `Solana RPC HTTP ${response.status}`
     );
 
   }
 
+
+  const data =
+    await response.json();
+
+
+  if (data.error) {
+
+    throw new Error(
+      data.error.message ||
+      "Solana RPC error"
+    );
+
+  }
+
+
   return data.result;
+
 }
 
-// ========================================
+
+// ======================================================
 // SOL BALANCE
-// ========================================
+// ======================================================
 
 async function getSolBalance(
   address
@@ -919,18 +1074,26 @@ async function getSolBalance(
   const result =
     await rpc(
       "getBalance",
-      [address]
+      [
+        address,
+        {
+          commitment: "confirmed"
+        }
+      ]
     );
 
+
   return (
-    result.value /
+    Number(result.value || 0) /
     1e9
   );
+
 }
 
-// ========================================
+
+// ======================================================
 // SPL TOKEN BALANCE
-// ========================================
+// ======================================================
 
 async function getTokenBalance(
   address,
@@ -941,6 +1104,7 @@ async function getTokenBalance(
     await rpc(
       "getTokenAccountsByOwner",
       [
+
         address,
 
         {
@@ -948,65 +1112,85 @@ async function getTokenBalance(
         },
 
         {
-          encoding:
-            "jsonParsed"
+          encoding: "jsonParsed",
+          commitment: "confirmed"
         }
+
       ]
     );
 
+
   let total = 0;
+
 
   for (
     const account
-    of result.value
+    of result.value || []
   ) {
 
-    total += Number(
-      account.account.data.parsed
-        .info.tokenAmount.uiAmount ||
-      0
-    );
+    const amount =
+      account
+        ?.account
+        ?.data
+        ?.parsed
+        ?.info
+        ?.tokenAmount
+        ?.uiAmount;
+
+
+    if (
+      amount !== null &&
+      amount !== undefined
+    ) {
+
+      total +=
+        Number(amount) || 0;
+
+    }
 
   }
 
+
   return total;
+
 }
 
-// ========================================
+
+// ======================================================
 // TOKEN PRICES
-// ========================================
+// ======================================================
 
 async function getPrices() {
 
   const mints = [
 
     TOKENS.SOL.mint,
-
     TOKENS.USDC.mint,
-
     TOKENS.USDT.mint,
-
     TOKENS.JUP.mint,
-
     TOKENS.BONK.mint
 
   ].join(",");
+
 
   const response =
     await fetch(
       `https://api.jup.ag/price/v3?ids=${mints}`
     );
 
+
   if (!response.ok) {
 
     throw new Error(
-      "Could not load token prices."
+      `Price API HTTP ${response.status}`
     );
 
   }
 
+
   const data =
     await response.json();
+
 
   return {
 
@@ -1046,11 +1230,52 @@ async function getPrices() {
       )
 
   };
+
 }
 
-// ========================================
-// UPDATE ASSET
-// ========================================
+
+// ======================================================
+// SAFE PRICE LOADER
+// ======================================================
+
+async function getPricesSafe() {
+
+  try {
+
+    return await getPrices();
+
+  } catch (error) {
+
+    console.warn(
+      "Price API unavailable:",
+      error
+    );
+
+
+    /*
+      Returning zero prices instead of throwing
+      means the portfolio can still display
+      the actual wallet balances.
+    */
+
+    return {
+
+      SOL: 0,
+      USDC: 0,
+      USDT: 0,
+      JUP: 0,
+      BONK: 0
+
+    };
+
+  }
+
+}
+
+
+// ======================================================
+// ASSET UI
+// ======================================================
 
 function setAsset(
   symbol,
@@ -1068,6 +1293,7 @@ function setAsset(
       `${symbol.toLowerCase()}Value`
     );
 
+
   if (balanceElement) {
 
     balanceElement.textContent =
@@ -1075,40 +1301,165 @@ function setAsset(
 
   }
 
+
   if (valueElement) {
 
     valueElement.textContent =
       formatUSD(value);
 
   }
+
 }
 
-// ========================================
+
+// ======================================================
+// PAY BALANCE
+// ======================================================
+
+async function updatePayBalance() {
+
+  const element =
+    $("payBalance");
+
+
+  if (!walletAddress) {
+
+    element.textContent =
+      "0.00";
+
+    return;
+  }
+
+
+  try {
+
+    let balance = 0;
+
+
+    if (
+      payToken === "SOL"
+    ) {
+
+      balance =
+        await getSolBalance(
+          walletAddress
+        );
+
+    } else {
+
+      balance =
+        await getTokenBalance(
+          walletAddress,
+          TOKENS[payToken].mint
+        );
+
+    }
+
+
+    element.textContent =
+      formatNumber(balance);
+
+  } catch (error) {
+
+    console.warn(
+      "Could not load pay balance:",
+      error
+    );
+
+    element.textContent =
+      "—";
+
+  }
+
+}
+
+
+// ======================================================
 // LOAD PORTFOLIO
-// ========================================
+// ======================================================
 
 async function loadPortfolio() {
 
   updatePortfolioWallet();
+
+  updateConnectionIndicator();
+
 
   if (!walletAddress) {
 
     resetPortfolio();
 
     return;
+
   }
 
-  $("portfolioStatus").textContent =
+
+  const status =
+    $("portfolioStatus");
+
+  const refreshButton =
+    $("refreshPortfolio");
+
+
+  status.textContent =
     "Loading wallet assets...";
+
+
+  refreshButton.classList.add(
+    "loading"
+  );
+
 
   try {
 
-    const results =
-      await Promise.all([
+    /*
+      IMPORTANT FIX:
 
-        getSolBalance(
+      We don't use one giant Promise.all anymore.
+
+      If one token request fails, it will NOT
+      destroy the entire portfolio.
+    */
+
+
+    const balances = {
+
+      SOL: 0,
+      USDC: 0,
+      USDT: 0,
+      JUP: 0,
+      BONK: 0
+
+    };
+
+
+    // -----------------------------
+    // SOL
+    // -----------------------------
+
+    try {
+
+      balances.SOL =
+        await getSolBalance(
           walletAddress
-        ),
+        );
+
+    } catch (error) {
+
+      console.warn(
+        "SOL balance failed:",
+        error
+      );
+
+    }
+
+
+    // -----------------------------
+    // SPL TOKENS
+    // -----------------------------
+
+    const tokenResults =
+      await Promise.allSettled([
 
         getTokenBalance(
           walletAddress,
@@ -1128,154 +1479,246 @@ async function loadPortfolio() {
         getTokenBalance(
           walletAddress,
           PORTFOLIO_MINTS.BONK
-        ),
-
-        getPrices()
+        )
 
       ]);
 
-    const sol =
-      results[0];
 
-    const usdc =
-      results[1];
+    if (
+      tokenResults[0].status ===
+      "fulfilled"
+    ) {
+      balances.USDC =
+        tokenResults[0].value;
+    }
 
-    const usdt =
-      results[2];
 
-    const jup =
-      results[3];
+    if (
+      tokenResults[1].status ===
+      "fulfilled"
+    ) {
+      balances.USDT =
+        tokenResults[1].value;
+    }
 
-    const bonk =
-      results[4];
+
+    if (
+      tokenResults[2].status ===
+      "fulfilled"
+    ) {
+      balances.JUP =
+        tokenResults[2].value;
+    }
+
+
+    if (
+      tokenResults[3].status ===
+      "fulfilled"
+    ) {
+      balances.BONK =
+        tokenResults[3].value;
+    }
+
+
+    // -----------------------------
+    // PRICES
+    // -----------------------------
 
     const prices =
-      results[5];
+      await getPricesSafe();
 
-    const solValue =
-      sol * prices.SOL;
 
-    const usdcValue =
-      usdc * prices.USDC;
+    // -----------------------------
+    // VALUES
+    // -----------------------------
 
-    const usdtValue =
-      usdt * prices.USDT;
+    const values = {
 
-    const jupValue =
-      jup * prices.JUP;
+      SOL:
+        balances.SOL *
+        prices.SOL,
 
-    const bonkValue =
-      bonk * prices.BONK;
+      USDC:
+        balances.USDC *
+        prices.USDC,
+
+      USDT:
+        balances.USDT *
+        prices.USDT,
+
+      JUP:
+        balances.JUP *
+        prices.JUP,
+
+      BONK:
+        balances.BONK *
+        prices.BONK
+
+    };
+
 
     const total =
-      solValue +
-      usdcValue +
-      usdtValue +
-      jupValue +
-      bonkValue;
+      values.SOL +
+      values.USDC +
+      values.USDT +
+      values.JUP +
+      values.BONK;
+
+
+    // -----------------------------
+    // UPDATE UI
+    // -----------------------------
 
     setAsset(
       "SOL",
-      sol,
-      solValue
+      balances.SOL,
+      values.SOL
     );
 
     setAsset(
       "USDC",
-      usdc,
-      usdcValue
+      balances.USDC,
+      values.USDC
     );
 
     setAsset(
       "USDT",
-      usdt,
-      usdtValue
+      balances.USDT,
+      values.USDT
     );
 
     setAsset(
       "JUP",
-      jup,
-      jupValue
+      balances.JUP,
+      values.JUP
     );
 
     setAsset(
       "BONK",
-      bonk,
-      bonkValue
+      balances.BONK,
+      values.BONK
     );
+
+
+    // -----------------------------
+    // ASSET COUNT
+    // -----------------------------
 
     let assetCount = 0;
 
-    if (sol > 0) assetCount++;
-    if (usdc > 0) assetCount++;
-    if (usdt > 0) assetCount++;
-    if (jup > 0) assetCount++;
-    if (bonk > 0) assetCount++;
+
+    Object.values(
+      balances
+    ).forEach(balance => {
+
+      if (
+        Number(balance) > 0
+      ) {
+        assetCount++;
+      }
+
+    });
+
 
     $("portfolioAssetCount")
       .textContent =
       assetCount;
 
+
+    $("assetCountLabel")
+      .textContent =
+      `${assetCount} ${
+        assetCount === 1
+          ? "asset"
+          : "assets"
+      }`;
+
+
     $("portfolioTotal")
       .textContent =
       formatUSD(total);
 
-    $("portfolioStatus")
-      .textContent =
-      "Updated just now.";
+
+    // -----------------------------
+    // EMPTY WALLET
+    // -----------------------------
+
+    if (
+      assetCount === 0
+    ) {
+
+      $("portfolioEmpty").hidden =
+        false;
+
+      status.textContent =
+        "Wallet loaded — no supported assets found.";
+
+    } else {
+
+      $("portfolioEmpty").hidden =
+        true;
+
+      status.textContent =
+        "Updated just now.";
+
+    }
+
 
   } catch (error) {
+
+    /*
+      This is now only for a genuine
+      overall failure, not a single
+      failed token request.
+    */
 
     console.error(
       "Portfolio error:",
       error
     );
 
-    $("portfolioStatus")
-      .textContent =
-      "Could not load portfolio. Tap refresh and try again.";
+
+    status.textContent =
+      "Couldn't load wallet data. Tap refresh to try again.";
+
+  } finally {
+
+    refreshButton.classList.remove(
+      "loading"
+    );
 
   }
+
 }
 
-// ========================================
+
+// ======================================================
 // REFRESH PORTFOLIO
-// ========================================
+// ======================================================
 
 $("refreshPortfolio")
   .addEventListener(
     "click",
     async () => {
 
-      const button =
-        $("refreshPortfolio");
-
-      button.style.transform =
-        "rotate(360deg)";
-
       await loadPortfolio();
-
-      setTimeout(
-        () => {
-          button.style.transform =
-            "";
-        },
-        300
-      );
 
     }
   );
 
-// ========================================
+
+// ======================================================
 // SWAP TRANSACTION
-// ========================================
+// ======================================================
 
 async function loadWeb3() {
 
   return await import(
     "https://esm.sh/@solana/web3.js@1.98.4"
   );
+
 }
+
 
 async function buildSwapTransaction() {
 
@@ -1287,10 +1730,12 @@ async function buildSwapTransaction() {
 
   }
 
+
   const response =
     await fetch(
       `${JUPITER_API}/swap`,
       {
+
         method: "POST",
 
         headers: {
@@ -1324,11 +1769,14 @@ async function buildSwapTransaction() {
           }
 
         })
+
       }
     );
 
+
   const data =
     await response.json();
+
 
   if (!response.ok) {
 
@@ -1340,6 +1788,7 @@ async function buildSwapTransaction() {
 
   }
 
+
   if (!data.swapTransaction) {
 
     throw new Error(
@@ -1348,8 +1797,15 @@ async function buildSwapTransaction() {
 
   }
 
+
   return data.swapTransaction;
+
 }
+
+
+// ======================================================
+// BASE64
+// ======================================================
 
 function base64ToBytes(
   base64
@@ -1363,6 +1819,7 @@ function base64ToBytes(
       binary.length
     );
 
+
   for (
     let i = 0;
     i < binary.length;
@@ -1374,8 +1831,15 @@ function base64ToBytes(
 
   }
 
+
   return bytes;
+
 }
+
+
+// ======================================================
+// EXECUTE SWAP
+// ======================================================
 
 async function executeSwap() {
 
@@ -1383,8 +1847,10 @@ async function executeSwap() {
     return;
   }
 
+
   const provider =
     getPhantomProvider();
+
 
   if (!provider) {
 
@@ -1395,6 +1861,7 @@ async function executeSwap() {
     return;
   }
 
+
   if (!walletAddress) {
 
     alert(
@@ -1404,6 +1871,7 @@ async function executeSwap() {
     return;
   }
 
+
   if (!latestQuote) {
 
     requestQuote();
@@ -1411,8 +1879,10 @@ async function executeSwap() {
     return;
   }
 
+
   isSwapping =
     true;
+
 
   swapButton.disabled =
     true;
@@ -1420,16 +1890,20 @@ async function executeSwap() {
   swapButton.textContent =
     "Preparing swap...";
 
+
   try {
 
     const web3 =
       await loadWeb3();
 
+
     quoteStatus.textContent =
       "Building transaction...";
 
+
     const transactionBase64 =
       await buildSwapTransaction();
+
 
     const transaction =
       web3.VersionedTransaction
@@ -1439,21 +1913,27 @@ async function executeSwap() {
           )
         );
 
+
     quoteStatus.textContent =
       "Confirm the transaction in Phantom...";
+
 
     const signed =
       await provider.signTransaction(
         transaction
       );
 
+
     quoteStatus.textContent =
       "Sending transaction...";
+
 
     const raw =
       signed.serialize();
 
+
     let binary = "";
+
 
     for (
       let i = 0;
@@ -1474,10 +1954,12 @@ async function executeSwap() {
 
     }
 
+
     const response =
       await fetch(
         SOLANA_RPC,
         {
+
           method: "POST",
 
           headers: {
@@ -1489,7 +1971,7 @@ async function executeSwap() {
 
             jsonrpc: "2.0",
 
-            id: 1,
+            id: Date.now(),
 
             method:
               "sendTransaction",
@@ -1512,11 +1994,14 @@ async function executeSwap() {
             ]
 
           })
+
         }
       );
 
+
     const result =
       await response.json();
+
 
     if (result.error) {
 
@@ -1526,41 +2011,57 @@ async function executeSwap() {
 
     }
 
+
     const signature =
       result.result;
+
 
     quoteStatus.textContent =
       "Swap sent ✓";
 
+
     swapButton.textContent =
       "Swap successful ✓";
+
 
     latestQuote =
       null;
 
+
     setTimeout(
-      loadPortfolio,
+      () => {
+
+        loadPortfolio();
+        updatePayBalance();
+
+      },
       3000
     );
+
 
     window.open(
       `https://solscan.io/tx/${signature}`,
       "_blank"
     );
 
+
   } catch (error) {
 
     console.error(error);
+
 
     quoteStatus.textContent =
       error.message ||
       "Swap failed.";
 
+
     swapButton.disabled =
       false;
 
+
     swapButton.textContent =
       `Swap ${payToken} → ${receiveToken}`;
+
 
   } finally {
 
@@ -1568,20 +2069,25 @@ async function executeSwap() {
       false;
 
   }
+
 }
+
 
 swapButton.addEventListener(
   "click",
   executeSwap
 );
 
-// ========================================
+
+// ======================================================
 // INITIALIZE
-// ========================================
+// ======================================================
 
 updateTokenDisplay();
 
 updatePortfolioWallet();
+
+updateConnectionIndicator();
 
 resetPortfolio();
 
