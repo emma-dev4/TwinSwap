@@ -3,30 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>TwinSwap</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <header class="hero">
-    <div class="brand">Twin<span>Swap</span></div>
+<header class="hero">
+  <div class="brand">Twin<span>Swap</span></div>
 
-    <h1>
-      Swap crypto.<br>
-      <span>Keep it simple.</span>
-    </h1>
+  <h1>Swap crypto.<br><span>Keep it simple.</span></h1>
 
-    <p>Fast and simple token swapping powered by Solana.</p>
-  </header>
+  <p>Fast and simple token swapping powered by Solana.</p>
+</header>
 
-  <main>
+<main>
 
-    <!-- ================= SWAP ================= -->
+  <nav class="main-nav">
+    <button class="nav-button active" data-tab="swapTab">Swap</button>
+    <button class="nav-button" data-tab="portfolioTab">Portfolio</button>
+  </nav>
 
-    <section class="swap-card">
+  <!-- ================= SWAP ================= -->
+
+  <section id="swapTab" class="tab-content active">
+
+    <div class="swap-card">
 
       <div class="swap-top">
         <h2>Swap</h2>
@@ -53,7 +55,7 @@
           <div class="token-select">
 
             <button id="payTokenButton" class="token-button">
-              <span id="payTokenIcon">◎</span>
+              <span id="payTokenIcon">💵</span>
               <span id="payTokenName">USDC</span>
               <span class="arrow">⌄</span>
             </button>
@@ -74,9 +76,7 @@
 
       </div>
 
-      <button id="switchTokens" class="switch-button">
-        ⇅
-      </button>
+      <button id="switchTokens" class="switch-button">⇅</button>
 
       <div class="token-box">
 
@@ -135,69 +135,260 @@
         Enter amount
       </button>
 
-    </section>
+    </div>
+
+  </section>
 
 
-    <!-- ================= PORTFOLIO ================= -->
+  <!-- ================= PORTFOLIO ================= -->
 
-    <section class="portfolio-card">
+  <section id="portfolioTab" class="tab-content">
+
+    <div class="portfolio-card">
 
       <div class="portfolio-header">
+
         <div>
-          <span class="portfolio-label">Your Portfolio</span>
-          <h2 id="portfolioTotal">$0.00</h2>
+          <span class="portfolio-label">
+            Total Portfolio
+          </span>
+
+          <h2 id="portfolioTotal">
+            $0.00
+          </h2>
         </div>
 
-        <button id="refreshPortfolio" class="refresh-button">
+        <button
+          id="refreshPortfolio"
+          class="refresh-button"
+          title="Refresh portfolio"
+        >
           ↻
         </button>
+
       </div>
 
-      <div id="portfolioWallet" class="portfolio-wallet">
-        Connect Phantom to view your portfolio
+      <div class="portfolio-wallet">
+
+        <span>Wallet</span>
+
+        <strong id="portfolioWallet">
+          Not connected
+        </strong>
+
       </div>
 
-      <div id="portfolioList" class="portfolio-list">
+      <div id="portfolioStatus" class="portfolio-status">
+        Connect Phantom to view your portfolio.
+      </div>
 
-        <div class="portfolio-empty">
-          <div class="empty-icon">◎</div>
-          <strong>No wallet connected</strong>
-          <span>Connect Phantom to see your assets.</span>
+      <div class="portfolio-summary">
+
+        <div>
+          <span>Assets</span>
+          <strong id="portfolioAssetCount">0</strong>
+        </div>
+
+        <div>
+          <span>Network</span>
+          <strong>Solana</strong>
         </div>
 
       </div>
 
-    </section>
+      <div class="asset-list">
+
+        <div class="asset-row">
+
+          <div class="asset-left">
+
+            <div class="asset-icon">
+              ◎
+            </div>
+
+            <div>
+              <strong>SOL</strong>
+              <span>Solana</span>
+            </div>
+
+          </div>
+
+          <div class="asset-right">
+
+            <strong id="solBalance">
+              0
+            </strong>
+
+            <span id="solValue">
+              $0.00
+            </span>
+
+          </div>
+
+        </div>
 
 
-    <!-- ================= INFO ================= -->
+        <div class="asset-row">
 
-    <section class="info-section">
+          <div class="asset-left">
 
-      <div>
-        <h3>⚡ Fast</h3>
-        <p>Get live swap quotes through Solana liquidity.</p>
+            <div class="asset-icon">
+              💵
+            </div>
+
+            <div>
+              <strong>USDC</strong>
+              <span>USD Coin</span>
+            </div>
+
+          </div>
+
+          <div class="asset-right">
+
+            <strong id="usdcBalance">
+              0
+            </strong>
+
+            <span id="usdcValue">
+              $0.00
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="asset-row">
+
+          <div class="asset-left">
+
+            <div class="asset-icon">
+              💵
+            </div>
+
+            <div>
+              <strong>USDT</strong>
+              <span>Tether</span>
+            </div>
+
+          </div>
+
+          <div class="asset-right">
+
+            <strong id="usdtBalance">
+              0
+            </strong>
+
+            <span id="usdtValue">
+              $0.00
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="asset-row">
+
+          <div class="asset-left">
+
+            <div class="asset-icon">
+              🪐
+            </div>
+
+            <div>
+              <strong>JUP</strong>
+              <span>Jupiter</span>
+            </div>
+
+          </div>
+
+          <div class="asset-right">
+
+            <strong id="jupBalance">
+              0
+            </strong>
+
+            <span id="jupValue">
+              $0.00
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="asset-row">
+
+          <div class="asset-left">
+
+            <div class="asset-icon">
+              🐕
+            </div>
+
+            <div>
+              <strong>BONK</strong>
+              <span>Bonk</span>
+            </div>
+
+          </div>
+
+          <div class="asset-right">
+
+            <strong id="bonkBalance">
+              0
+            </strong>
+
+            <span id="bonkValue">
+              $0.00
+            </span>
+
+          </div>
+
+        </div>
+
       </div>
 
-      <div>
-        <h3>🔒 Non-custodial</h3>
-        <p>Your wallet stays under your control.</p>
-      </div>
+    </div>
 
-      <div>
-        <h3>🌐 Web3</h3>
-        <p>Built for the Solana ecosystem.</p>
-      </div>
+  </section>
 
-    </section>
 
-  </main>
+  <!-- ================= INFO ================= -->
 
-  <footer>
-    <p>©️ 2026 TwinSwap</p>
-  </footer>
+  <section class="info-section">
 
-  <script src="script.js"></script>
+    <div>
+      <h3>⚡ Fast</h3>
+      <p>
+        Get live swap quotes through Solana liquidity.
+      </p>
+    </div>
+
+    <div>
+      <h3>🔒 Non-custodial</h3>
+      <p>
+        Your wallet stays under your control.
+      </p>
+    </div>
+
+    <div>
+      <h3>🌐 Web3</h3>
+      <p>
+        Built for the Solana ecosystem.
+      </p>
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  <p>©️ 2026 TwinSwap</p>
+</footer>
+
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
